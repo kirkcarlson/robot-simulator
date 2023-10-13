@@ -1,10 +1,15 @@
 import pygame
-import math
+import rmath
 pygame.init()
 
+"""CONSTANTS"""
 playerColor = (255,0,0)
 playerAngle =  90 # relative to right of window
 playerVector = 90 # relative to right of window
+
+
+
+"""SPECIAL CLASSES"""
 class Mode:
 
     def __init__( self, modes):
@@ -60,12 +65,12 @@ def draw_joy ( col, y, controller):
     #print( f"power {controller.get_power_level()}")
     #print( f"line {yline(1)}")
     #baseline = y
-    draw_text("Battery Level: " + str(controller.get_power_level()), font, pygame.Color("azure"), col, yline(1))
-    draw_text("Controller Type: " + str(controller.get_name()), font, pygame.Color("azure"), col, yline(2))
+    draw_text("Battery Level: " + str(controller.get_power_level()),    font, pygame.Color("azure"), col, yline(1))
+    draw_text("Controller Type: " + str(controller.get_name()),         font, pygame.Color("azure"), col, yline(2))
     numAxes = controller.get_numaxes()
-    draw_text("Number of axes: " + str(numAxes), font, pygame.Color("azure"), col, yline(3))
+    draw_text("Number of axes: " + str(numAxes),                        font, pygame.Color("azure"), col, yline(3))
     draw_text("Number of buttons: " + str(controller.get_numbuttons()), font, pygame.Color("azure"), col, yline(4))
-    draw_text("Number of hats: " + str(controller.get_numhats()), font, pygame.Color("azure"), col, yline(5))
+    draw_text("Number of hats: " + str(controller.get_numhats()),       font, pygame.Color("azure"), col, yline(5))
 
     # report button number
     numButtons = controller.get_numbuttons()
@@ -78,10 +83,8 @@ def draw_joy ( col, y, controller):
         draw_text(f"Axis {joyAxis}: {controller.get_axis( joyAxis):> 0.2f}", font, pygame.Color("azure"), col, yline( 7+ joyAxis))
 
     # Hat position. All or nothing for direction, not a float like
-    # get_axis(). Position is a tuple of int values (x, y).
     hats = controller.get_numhats()
     for hat in range(hats):
-        #draw_text(f"Hat {hat}: {controller.get_hat( hat):> 0.1f}", font, pygame.Color("azure"), 10, yline( 7+ numAxes + hat))
         draw_text(f"Hat {hat}: {controller.get_hat( hat)}", font, pygame.Color("azure"), 10, yline( 7+ numAxes + hat))
 
 class Player(pygame.sprite.Sprite):
@@ -101,38 +104,13 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         # Create the rotated copy.
-        self.image = pygame.transform.rotate(self.original_image, constrain360(-playerAngle)).convert()  # Angle is absolute value!
+        self.image = pygame.transform.rotate(self.original_image, rmath.constrain360(-playerAngle)).convert()  # Angle is absolute value!
 
         # Make sure your rect represent the actual Surface.
         self.rect = self.image.get_rect()
 
         # Since the dimension probably changed you should move its center back to where it was.
         self.rect.center = self.position.x, self.position.y
-
-def constrain360( angle): # constrain angle to range (0,360)
-    return angle % 360
-
-def constrain180( angle): # constrain angle to range (-180,180)
-    angle = constrain360( angle)
-    if angle > 180:
-        return angle - 360
-    else:
-        return angle
-
-def atan360( adj, opp):  # find the angle 0..350 from x and y values
-    if abs( adj) < 0.000005:
-        angle = 0
-    else:
-        angle = math.degrees( math.atan (opp/adj))
-
-    if opp >= 0 and adj >= 0: # NE quadrant            pygame SW quadrant
-        angle += 0
-    if adj < 0: # SE or SW quadrant                    pygame SE or NE quadrant
-        angle += 180
-    if opp < 0 and adj >=  0: # NW quadrant            pygame NW quadrant
-        angle += 360
-    return angle
-
 
 #initialise the joystick module
 pygame.joystick.init()
@@ -273,7 +251,7 @@ while run:
             v_move = vert_move
 
         #calculate the playerVector
-        playerVector = atan360 ( h_move, v_move)
+        playerVector = rmath.atan360 ( h_move, v_move)
         #if v_move < 0 and h_move < 0:
         #    playerVector -= 180
         #if v_move < 0 and h_move > 0:
@@ -289,20 +267,20 @@ while run:
 
         #rotate player to player vector
         if rotationMode.mode == 1 and abs( horiz_move) > 0.00005 and abs( vert_move) > 0.00005: # only when moving...
-            diff = constrain360( playerAngle - playerVector)
+            diff = rmath.constrain360( playerAngle - playerVector)
             if abs( diff ) > 3:
                 if diff > 0 and diff <180:
-                    playerAngle = constrain360( playerAngle - 3)
+                    playerAngle = rmath.constrain360( playerAngle - 3)
                 else:
-                    playerAngle = constrain360( playerAngle + 3)
+                    playerAngle = rmath.constrain360( playerAngle + 3)
             else:
-                playerAngle = constrain360( playerVector)
+                playerAngle = rmath.constrain360( playerVector)
 
         if rotationMode.mode == 2 and abs( horiz_move) > 0.00005 and abs( vert_move) > 0.00005: # only when moving...
-            playerAngle = constrain360( playerAngle - 3) # rotate clockwise
+            playerAngle = rmath.constrain360( playerAngle - 3) # rotate clockwise
 
         if rotationMode.mode == 3 and abs( horiz_move) > 0.00005 and abs( vert_move) > 0.00005: # only when moving...
-            playerAngle = constrain360( playerAngle + 3) # rotate counter clockwise
+            playerAngle = rmath.constrain360( playerAngle + 3) # rotate counter clockwise
 
     # keep the player on the field
     player.position = pygame.math.Vector2()
