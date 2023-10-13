@@ -36,6 +36,54 @@ class Mode:
 elevatorMode = Mode ([ "idle", "low", "medium", "high"])
 rotationMode = Mode ([ "stable", "to front", "spin clockwise", "spin counter clockwise"])
 
+#define font
+font_size = 16
+font = pygame.font.SysFont("Futura", font_size)
+base_line = 10
+line_size = 15
+
+def yline ( line):
+    return base_line + line * line_size
+
+#function for outputting text onto the screen
+def draw_text(text, font, text_col, x, y):
+    img = font.render(text, True, text_col)
+    screen.blit(img, (x, y))
+
+def draw_joy ( col, y, controller):
+    '''Print the values for all joysticks of a controller
+       col is the x position for the text
+       line is the starting line number
+       controller is the joystick controller object
+    '''
+    #print( controller)
+    #print( f"power {controller.get_power_level()}")
+    #print( f"line {yline(1)}")
+    #baseline = y
+    draw_text("Battery Level: " + str(controller.get_power_level()), font, pygame.Color("azure"), col, yline(1))
+    draw_text("Controller Type: " + str(controller.get_name()), font, pygame.Color("azure"), col, yline(2))
+    numAxes = controller.get_numaxes()
+    draw_text("Number of axes: " + str(numAxes), font, pygame.Color("azure"), col, yline(3))
+    draw_text("Number of buttons: " + str(controller.get_numbuttons()), font, pygame.Color("azure"), col, yline(4))
+    draw_text("Number of hats: " + str(controller.get_numhats()), font, pygame.Color("azure"), col, yline(5))
+
+    # report button number
+    numButtons = controller.get_numbuttons()
+    buttons = ""
+    for joyButton in range (numButtons):
+        if controller.get_button(joyButton):
+            buttons += " " + str(joyButton)
+    draw_text("Button: " + buttons, font, pygame.Color("azure"), col, yline(6))
+    for joyAxis in range (numAxes):
+        draw_text(f"Axis {joyAxis}: {controller.get_axis( joyAxis):> 0.2f}", font, pygame.Color("azure"), col, yline( 7+ joyAxis))
+
+    # Hat position. All or nothing for direction, not a float like
+    # get_axis(). Position is a tuple of int values (x, y).
+    hats = controller.get_numhats()
+    for hat in range(hats):
+        #draw_text(f"Hat {hat}: {controller.get_hat( hat):> 0.1f}", font, pygame.Color("azure"), 10, yline( 7+ numAxes + hat))
+        draw_text(f"Hat {hat}: {controller.get_hat( hat)}", font, pygame.Color("azure"), 10, yline( 7+ numAxes + hat))
+
 class Player(pygame.sprite.Sprite):
 
     def __init__(self, position=(0, 0)):
@@ -97,20 +145,6 @@ SCREEN_HEIGHT = 750
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("2022 FRC 4513 Simulator")
 
-#define font
-font_size = 16
-font = pygame.font.SysFont("Futura", font_size)
-base_line = 10
-line_size = 15
-
-def yline ( line):
-    return base_line + line * line_size
-
-#function for outputting text onto the screen
-def draw_text(text, font, text_col, x, y):
-    img = font.render(text, True, text_col)
-    screen.blit(img, (x, y))
-
 #create clock for setting game frame rate
 clock = pygame.time.Clock()
 FPS = 60
@@ -143,7 +177,6 @@ while run:
         draw_text("Number of buttons: " + str(joystick.get_numbuttons()), font, pygame.Color("azure"), 10, yline(4))
         draw_text("Number of hats: " + str(joystick.get_numhats()), font, pygame.Color("azure"), 10, yline(5))
 
-    for joystick in joysticks:
         # report button number
         numButtons = joystick.get_numbuttons()
         draw_text("Button: ", font, pygame.Color("azure"), 10, yline(6))
@@ -167,6 +200,8 @@ while run:
         draw_text("Rotation Mode: " + rotationMode.modes[rotationMode.mode], font, pygame.Color("azure"), 10, yline( 10+joyAxis))
         draw_text("Rotation Angle: " + str( playerAngle), font, pygame.Color("azure"), 10, yline( 11+joyAxis))
         draw_text("Heading: " + str( playerVector), font, pygame.Color("azure"), 10, yline( 12+joyAxis))
+
+        draw_joy (200, 40, joystick)
 
 
         ''' mode control
