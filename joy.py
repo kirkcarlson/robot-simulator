@@ -1,45 +1,14 @@
 import pygame
 import rmath
+import mode
 pygame.init()
 
-"""CONSTANTS"""
-playerColor = (255,0,0)
-playerAngle =  90 # relative to right of window
-playerVector = 90 # relative to right of window
-
-
-
 """SPECIAL CLASSES"""
-class Mode:
 
-    def __init__( self, modes):
-        self.modes = modes
-        self.mode = 0
-        self.lastTrigger = 0
-
-    def isEdge( self, trigger):
-        if trigger:
-            if self.lastTrigger == 0:
-                self.lastTrigger = 1
-                return True
-        else:
-            self.lastTrigger = 0
-        return False
-
-    def advance( self):
-        if self.mode + 1 < len(self.modes):
-            self.mode += 1
-
-    def advanceCyclic( self):
-        self.mode += 1
-        if self.mode >= len(self.modes):
-            self.mode = 0
-
-    def reset():
-        self.mode = 0
-
-elevatorMode = Mode ([ "idle", "low", "medium", "high"])
-rotationMode = Mode ([ "stable", "to front", "spin clockwise", "spin counter clockwise"])
+elevatorMode = mode.Mode ([ "idle", "low", "medium", "high"])
+rotationMode = mode.Mode ([ "stable", "to front", "spin CW", "spin CCW"])
+spinSpeedMode = mode.Mode ([ "fast", "slow"])
+spinSpeeds = [2, 0.2]
 
 #define font
 font_size = 16
@@ -61,10 +30,6 @@ def draw_joy ( col, y, controller):
        line is the starting line number
        controller is the joystick controller object
     '''
-    #print( controller)
-    #print( f"power {controller.get_power_level()}")
-    #print( f"line {yline(1)}")
-    #baseline = y
     draw_text("Battery Level: " + str(controller.get_power_level()),    font, pygame.Color("azure"), col, yline(1))
     draw_text("Controller Type: " + str(controller.get_name()),         font, pygame.Color("azure"), col, yline(2))
     numAxes = controller.get_numaxes()
@@ -85,7 +50,7 @@ def draw_joy ( col, y, controller):
     # Hat position. All or nothing for direction, not a float like
     hats = controller.get_numhats()
     for hat in range(hats):
-        draw_text(f"Hat {hat}: {controller.get_hat( hat)}", font, pygame.Color("azure"), 10, yline( 7+ numAxes + hat))
+        draw_text(f"Hat {hat}: {controller.get_hat( hat)}", font, pygame.Color("azure"), col, yline( 7+ numAxes + hat))
 
 class Player(pygame.sprite.Sprite):
 
@@ -112,35 +77,36 @@ class Player(pygame.sprite.Sprite):
         # Since the dimension probably changed you should move its center back to where it was.
         self.rect.center = self.position.x, self.position.y
 
-#initialise the joystick module
-pygame.joystick.init()
+"""CONSTANTS"""
+playerColor = (255,0,0)
+playerAngle =  90 # relative to right of window
+playerVector = 90 # relative to right of window
 
 #define screen size
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 750
+FPS = 60   # frames per seconds
+
+
+
+#initialise the joystick module
+pygame.joystick.init()
 
 #create game window
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("2022 FRC 4513 Simulator")
 
-#create clock for setting game frame rate
-clock = pygame.time.Clock()
-FPS = 60
+joysticks = []              #create empty list to store joysticks
+clock = pygame.time.Clock() #create clock for setting game frame rate
 
-#create empty list to store joysticks
-joysticks = []
-
-#define player colour
 playerColor  = "royalblue"
-#create player rectangle
 x = 350
 y = 200
-player = Player(position=(x,y))
+player = Player(position=(x,y))  #define player
 
 #game loop
 run = True
 while run:
-
     clock.tick(FPS)
 
     #update background
@@ -172,12 +138,13 @@ while run:
         hats = joystick.get_numhats()
         for hat in range(hats):
             move = joystick.get_hat( hat)
-            draw_text("Hat " + str(hat) + ": " + str( move), font, pygame.Color("azure"), 10, yline( 8+joyAxis))
+            draw_text("Hat " + str(hat) + ": " + str( move),  font, pygame.Color("azure"), 10, yline( 8+joyAxis))
 
-        draw_text("Elevator Mode: " + elevatorMode.modes[elevatorMode.mode], font, pygame.Color("azure"), 10, yline( 9+joyAxis))
-        draw_text("Rotation Mode: " + rotationMode.modes[rotationMode.mode], font, pygame.Color("azure"), 10, yline( 10+joyAxis))
-        draw_text("Rotation Angle: " + str( playerAngle), font, pygame.Color("azure"), 10, yline( 11+joyAxis))
-        draw_text("Heading: " + str( playerVector), font, pygame.Color("azure"), 10, yline( 12+joyAxis))
+        draw_text("Elevator Mode: " + elevatorMode.current(),   font, pygame.Color("azure"), 10, yline( 9+joyAxis))
+        draw_text("Rotation Mode: " + rotationMode.current(),   font, pygame.Color("azure"), 10, yline( 10+joyAxis))
+        draw_text("Rotation Speed: " + spinSpeedMode.current(), font, pygame.Color("azure"), 10, yline( 11+joyAxis))
+        draw_text("Rotation Angle: " + str( playerAngle),       font, pygame.Color("azure"), 10, yline( 12+joyAxis))
+        draw_text("Heading: " + str( playerVector),             font, pygame.Color("azure"), 10, yline( 13+joyAxis))
 
         draw_joy (200, 40, joystick)
 
@@ -208,6 +175,9 @@ while run:
 
         if rotationMode.isEdge ( joystick.get_button(2)):
             rotationMode.advanceCyclic()
+
+        if spinSpeedMode.isEdge ( joystick.get_button(5)):
+            spinSpeedMode.advanceCyclic()
 
         #change player colour with buttons
         if joystick.get_button(0):
@@ -259,10 +229,10 @@ while run:
 
         #rotate player with paddles or A-B buttons
         if joystick.get_button(0): # A or right paddle, clockwise
-            playerAngle += 1
+            playerAngle = rmath.constrain360( playerAngle + spinSpeeds[ spinSpeedMode.mode])
             rotationMode.mode = 0 # turn off auto rotation
         if joystick.get_button(1): # B or left paddle, counter clockwise
-            playerAngle -= 1
+            playerAngle = rmath.constrain360( playerAngle - spinSpeeds[ spinSpeedMode.mode])
             rotationMode.mode = 0 # turn off auto rotation
 
         #rotate player to player vector
