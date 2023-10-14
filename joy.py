@@ -13,10 +13,10 @@ spinSpeeds = [2, 0.2]
 #define font
 font_size = 16
 font = pygame.font.SysFont("Futura", font_size)
-base_line = 10
-line_size = 15
 
 def yline ( line):
+    line_size = 15
+    base_line = 10
     return base_line + line * line_size
 
 #function for outputting text onto the screen
@@ -52,15 +52,15 @@ def draw_joy ( col, y, controller):
     for hat in range(hats):
         draw_text(f"Hat {hat}: {controller.get_hat( hat)}", font, pygame.Color("azure"), col, yline( 7+ numAxes + hat))
 
-class Player(pygame.sprite.Sprite):
+class Robot(pygame.sprite.Sprite):
 
     def __init__(self, position=(0, 0)):
-        super(Player, self).__init__()
+        super(Robot, self).__init__()
         self.original_image = pygame.Surface((32, 32))
-        #pygame.draw.lines(self.original_image, playerColor, True, [( 0,0),  (31,0),  (31,13), (8,13),
+        #pygame.draw.lines(self.original_image, robotColor, True, [( 0,0),  (31,0),  (31,13), (8,13),
         #                                                            (8,9),   (4,9),   (4,21), (8,21),
         #                                                            (9,17), (31,17), (31,31), (0,31)])
-        pygame.draw.lines(self.original_image, playerColor, True, [( 0,0),  (31,0),  (31,31),  (0,31),
+        pygame.draw.lines(self.original_image, robotColor, True, [( 0,0),  (31,0),  (31,31),  (0,31),
                                                                    ( 0,17), (23,17), (23,21), (27,21),
                                                                    (27,9),  (23,9),  (23,13),  (0,13)])
         self.image = self.original_image  # This will reference our rotated copy.
@@ -69,7 +69,7 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         # Create the rotated copy.
-        self.image = pygame.transform.rotate(self.original_image, rmath.constrain360(-playerAngle)).convert()  # Angle is absolute value!
+        self.image = pygame.transform.rotate(self.original_image, rmath.constrain360(-robotHeading)).convert()  # Angle is absolute value!
 
         # Make sure your rect represent the actual Surface.
         self.rect = self.image.get_rect()
@@ -78,9 +78,9 @@ class Player(pygame.sprite.Sprite):
         self.rect.center = self.position.x, self.position.y
 
 """CONSTANTS"""
-playerColor = (255,0,0)
-playerAngle =  90 # relative to right of window
-playerVector = 90 # relative to right of window
+robotColor = (255,0,0)
+robotHeading =  90 # relative to right of window
+robotVector = 90 # relative to right of window
 
 #define screen size
 SCREEN_WIDTH = 1200
@@ -99,55 +99,41 @@ pygame.display.set_caption("2022 FRC 4513 Simulator")
 joysticks = []              #create empty list to store joysticks
 clock = pygame.time.Clock() #create clock for setting game frame rate
 
-playerColor  = "royalblue"
+robotColor  = "royalblue"
 x = 350
 y = 200
-player = Player(position=(x,y))  #define player
+robot = Robot(position=(x,y))  #define robot
 
 #game loop
 run = True
 while run:
     clock.tick(FPS)
 
-    #update background
+    #event handler
+    for event in pygame.event.get():
+        if event.type == pygame.JOYDEVICEADDED:
+            joy = pygame.joystick.Joystick(event.device_index)
+            joysticks.append(joy)
+        #quit program
+        if event.type == pygame.QUIT:
+            run = False
+
+    #fill in background
     screen.fill(pygame.Color("midnightblue"))
 
     #show number of connected joysticks
     draw_text("Controllers: " + str(pygame.joystick.get_count()), font, pygame.Color("azure"), 10, yline(0))
     for joystick in joysticks:
-        draw_text("Battery Level: " + str(joystick.get_power_level()), font, pygame.Color("azure"), 10, yline(1))
-        draw_text("Controller Type: " + str(joystick.get_name()), font, pygame.Color("azure"), 10, yline(2))
-        draw_text("Number of axes: " + str(joystick.get_numaxes()), font, pygame.Color("azure"), 10, yline(3))
-        draw_text("Number of buttons: " + str(joystick.get_numbuttons()), font, pygame.Color("azure"), 10, yline(4))
-        draw_text("Number of hats: " + str(joystick.get_numhats()), font, pygame.Color("azure"), 10, yline(5))
-
-        # report button number
-        numButtons = joystick.get_numbuttons()
-        draw_text("Button: ", font, pygame.Color("azure"), 10, yline(6))
-        for joyButton in range (numButtons):
-            if joystick.get_button(joyButton):
-                draw_text("Button: " + str(joyButton), font, pygame.Color("azure"), 10, yline(6))
-
-        numAxes = joystick.get_numaxes()
-        for joyAxis in range (numAxes):
-            move = joystick.get_axis( joyAxis)
-            draw_text("Axis " + str(joyAxis) + ": " + str( move), font, pygame.Color("azure"), 10, yline( 7+ joyAxis))
-
-        # Hat position. All or nothing for direction, not a float like
-        # get_axis(). Position is a tuple of int values (x, y).
-        hats = joystick.get_numhats()
-        for hat in range(hats):
-            move = joystick.get_hat( hat)
-            draw_text("Hat " + str(hat) + ": " + str( move),  font, pygame.Color("azure"), 10, yline( 8+joyAxis))
-
-        draw_text("Elevator Mode: " + elevatorMode.current(),   font, pygame.Color("azure"), 10, yline( 9+joyAxis))
-        draw_text("Rotation Mode: " + rotationMode.current(),   font, pygame.Color("azure"), 10, yline( 10+joyAxis))
-        draw_text("Rotation Speed: " + spinSpeedMode.current(), font, pygame.Color("azure"), 10, yline( 11+joyAxis))
-        draw_text("Rotation Angle: " + str( playerAngle),       font, pygame.Color("azure"), 10, yline( 12+joyAxis))
-        draw_text("Heading: " + str( playerVector),             font, pygame.Color("azure"), 10, yline( 13+joyAxis))
-
+        draw_joy (4, 40, joystick)
         draw_joy (200, 40, joystick)
 
+
+        # really want this to be for each robot.
+        draw_text("Elevator Mode: " + elevatorMode.current(),   font, pygame.Color("azure"), 10, yline( 15))
+        draw_text("Rotation Mode: " + rotationMode.current(),   font, pygame.Color("azure"), 10, yline( 16))
+        draw_text("Rotation Speed: " + spinSpeedMode.current(), font, pygame.Color("azure"), 10, yline( 17))
+        draw_text("Rotation Angle: " + str( robotHeading),      font, pygame.Color("azure"), 10, yline( 18))
+        draw_text("Heading: " + str( robotVector),              font, pygame.Color("azure"), 10, yline( 19))
 
         ''' mode control
         each press advances the mode by one
@@ -163,12 +149,6 @@ while run:
         preset 4: medium stand     med         med
         preset 5: high stand       high        high
 
-        common Class... which has a set of states
-        which is only half the number of real states
-        each real state has a pre-state where it is waiting for the button
-        and the real state where it is waiting for the button release
-
-
         '''
         if elevatorMode.isEdge ( joystick.get_button(6)):
             elevatorMode.advanceCyclic()
@@ -179,17 +159,17 @@ while run:
         if spinSpeedMode.isEdge ( joystick.get_button(5)):
             spinSpeedMode.advanceCyclic()
 
-        #change player colour with buttons
+        #change robot colour with buttons
         if joystick.get_button(0):
-            playerColor = "royalblue"
+            robotColor = "royalblue"
         if joystick.get_button(1):
-            playerColor = "crimson"
+            robotColor = "crimson"
         if joystick.get_button(2):
-            playerColor = "fuchsia"
+            robotColor = "fuchsia"
         if joystick.get_button(3):
-            playerColor = "forestgreen"
+            robotColor = "forestgreen"
 
-        #player movement with hat
+        #robot movement with hat
         move = joystick.get_hat( 0)
         x += move[0] * 5
         y -= move[1] * 5
@@ -198,7 +178,7 @@ while run:
         h_move = move[0]
         v_move = move[1]
 
-        #player orientation with left analog stick
+        #robot orientation with left analog stick
         horiz_move = joystick.get_axis(0)
         vert_move = joystick.get_axis(1)
         if abs(vert_move) > 0.05:
@@ -209,7 +189,7 @@ while run:
             h_move = horiz_move
             v_move = vert_move
 
-        #player movement with right analog stick
+        #robot movement with right analog stick
         horiz_move = joystick.get_axis(3)
         vert_move = joystick.get_axis(4)
         if abs(vert_move) > 0.05:
@@ -220,40 +200,40 @@ while run:
             h_move = horiz_move
             v_move = vert_move
 
-        #calculate the playerVector
-        playerVector = rmath.atan360 ( h_move, v_move)
+        #calculate the robotVector
+        robotVector = rmath.atan360 ( h_move, v_move)
         #if v_move < 0 and h_move < 0:
-        #    playerVector -= 180
+        #    robotVector -= 180
         #if v_move < 0 and h_move > 0:
-        #    playerVector += 180
+        #    robotVector += 180
 
-        #rotate player with paddles or A-B buttons
+        #rotate robot with paddles or A-B buttons
         if joystick.get_button(0): # A or right paddle, clockwise
-            playerAngle = rmath.constrain360( playerAngle + spinSpeeds[ spinSpeedMode.mode])
+            robotHeading = rmath.constrain360( robotHeading + spinSpeeds[ spinSpeedMode.mode])
             rotationMode.mode = 0 # turn off auto rotation
         if joystick.get_button(1): # B or left paddle, counter clockwise
-            playerAngle = rmath.constrain360( playerAngle - spinSpeeds[ spinSpeedMode.mode])
+            robotHeading = rmath.constrain360( robotHeading - spinSpeeds[ spinSpeedMode.mode])
             rotationMode.mode = 0 # turn off auto rotation
 
-        #rotate player to player vector
+        #rotate robot to robot vector
         if rotationMode.mode == 1 and abs( horiz_move) > 0.00005 and abs( vert_move) > 0.00005: # only when moving...
-            diff = rmath.constrain360( playerAngle - playerVector)
+            diff = rmath.constrain360( robotHeading - robotVector)
             if abs( diff ) > 3:
                 if diff > 0 and diff <180:
-                    playerAngle = rmath.constrain360( playerAngle - 3)
+                    robotHeading = rmath.constrain360( robotHeading - spinSpeeds[ spinSpeedMode.mode])
                 else:
-                    playerAngle = rmath.constrain360( playerAngle + 3)
+                    robotHeading = rmath.constrain360( robotHeading + spinSpeeds[ spinSpeedMode.mode])
             else:
-                playerAngle = rmath.constrain360( playerVector)
+                robotHeading = rmath.constrain360( robotVector)
 
         if rotationMode.mode == 2 and abs( horiz_move) > 0.00005 and abs( vert_move) > 0.00005: # only when moving...
-            playerAngle = rmath.constrain360( playerAngle - 3) # rotate clockwise
+            robotHeading = rmath.constrain360( robotHeading - spinSpeeds[ spinSpeedMode.mode]) # rotate clockwise
 
         if rotationMode.mode == 3 and abs( horiz_move) > 0.00005 and abs( vert_move) > 0.00005: # only when moving...
-            playerAngle = rmath.constrain360( playerAngle + 3) # rotate counter clockwise
+            robotHeading = rmath.constrain360( robotHeading + spinSpeeds[ spinSpeedMode.mode]) # rotate counter clockwise
 
-    # keep the player on the field
-    player.position = pygame.math.Vector2()
+    # keep the robot on the field
+    robot.position = pygame.math.Vector2()
     if x < 0:
         x = 0
     if x > SCREEN_WIDTH:
@@ -262,19 +242,10 @@ while run:
         y = 0
     if y > SCREEN_HEIGHT:
         y = SCREEN_HEIGHT
-    player.position.xy = x, y
+    robot.position.xy = x, y
 
-    player.update()
-    screen.blit(player.image, player.rect)
+    robot.update()
+    screen.blit(robot.image, robot.rect)
     pygame.display.update()
-
-    #event handler
-    for event in pygame.event.get():
-        if event.type == pygame.JOYDEVICEADDED:
-            joy = pygame.joystick.Joystick(event.device_index)
-            joysticks.append(joy)
-        #quit program
-        if event.type == pygame.QUIT:
-            run = False
 
 pygame.quit()
