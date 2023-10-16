@@ -1,15 +1,42 @@
 import pygame
 import rmath
+import math
 import mode
 pygame.init()
 
 """SPECIAL CLASSES"""
+"""
+need to define a better Class for
+- Joysticks
+  * modes states
+  * temporary variables
+  * button names
+- Robot
+  * position
+  * heading
+  * pointing angle
 
+maybe use enums with Mode to tie names and values easier
+"""
 elevatorMode = mode.Mode ([ "idle", "low", "medium", "high"])
-rotationMode = mode.Mode ([ "stable", "to front", "spin CW", "spin CCW"])
-spinSpeedMode = mode.Mode ([ "fast", "slow"])
-spinSpeeds = [2, 0.2]
+rotationMode = mode.Mode ([ "manual", "to front", "spin CW", "spin CCW", "tank", "tank field mode"])
+manualRotation = 0
+autoRotationMode = 1
+spinCWMode = 2
+spinCCWMode = 3
+tankMode = 4
+tankFieldMode = 5
 
+spinSpeedMode = mode.Mode ([ "5", "2.5", "1", "0.5"])
+spinSpeeds = [5, 2.5, 1, 0.5]
+joyAngle = 0
+joyMagnitude = 0
+minJoy = 0.0005
+
+button_A = 0
+button_B = 0
+button_X = 0
+button_Y = 1
 #define font
 font_size = 16
 font = pygame.font.SysFont("Futura", font_size)
@@ -69,7 +96,8 @@ class Robot(pygame.sprite.Sprite):
 
     def update(self):
         # Create the rotated copy.
-        self.image = pygame.transform.rotate(self.original_image, rmath.constrain360(-robotHeading)).convert()  # Angle is absolute value!
+        # py image has y down and 0 to the right, hence 90-angle
+        self.image = pygame.transform.rotate(self.original_image, rmath.constrain360(90-robotPointing)).convert()  # Angle is absolute value!
 
         # Make sure your rect represent the actual Surface.
         self.rect = self.image.get_rect()
@@ -79,8 +107,10 @@ class Robot(pygame.sprite.Sprite):
 
 """CONSTANTS"""
 robotColor = (255,0,0)
-robotHeading =  90 # relative to right of window
-robotVector = 90 # relative to right of window
+
+"""VARIABLES"""
+robotPointing = robotHeading =  90 # relative to top of window
+joyY = joyX = 0
 
 #define screen size
 SCREEN_WIDTH = 1200
@@ -117,7 +147,9 @@ while run:
         #quit program
         if event.type == pygame.QUIT:
             run = False
-
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                run = False
     #fill in background
     screen.fill(pygame.Color("midnightblue"))
 
@@ -129,11 +161,11 @@ while run:
 
 
         # really want this to be for each robot.
-        draw_text("Elevator Mode: " + elevatorMode.current(),   font, pygame.Color("azure"), 10, yline( 15))
-        draw_text("Rotation Mode: " + rotationMode.current(),   font, pygame.Color("azure"), 10, yline( 16))
-        draw_text("Rotation Speed: " + spinSpeedMode.current(), font, pygame.Color("azure"), 10, yline( 17))
-        draw_text("Rotation Angle: " + str( robotHeading),      font, pygame.Color("azure"), 10, yline( 18))
-        draw_text("Heading: " + str( robotVector),              font, pygame.Color("azure"), 10, yline( 19))
+        draw_text(f"Elevator Mode: {elevatorMode.current()}",   font, pygame.Color("azure"), 10, yline( 15))
+        draw_text(f"Rotation Mode: {rotationMode.current()}",   font, pygame.Color("azure"), 10, yline( 16))
+        draw_text(f"Rotation Speed: {spinSpeedMode.current()}", font, pygame.Color("azure"), 10, yline( 17))
+        draw_text(f"Pointing Angle: {robotPointing: 7.2f}",      font, pygame.Color("azure"), 10, yline( 18))
+        draw_text(f"Heading Angle: {robotHeading: 7.2f}",      font, pygame.Color("azure"), 10, yline( 19))
 
         ''' mode control
         each press advances the mode by one
@@ -169,68 +201,135 @@ while run:
         if joystick.get_button(3):
             robotColor = "forestgreen"
 
+        ### get joystick vectors
         #robot movement with hat
         move = joystick.get_hat( 0)
-        x += move[0] * 5
-        y -= move[1] * 5
-        horiz_move = move[0]
-        vert_move =  move[1]
-        h_move = move[0]
-        v_move = move[1]
+        joyX = move[0]
+        joyY = move[1] # positive is up
+        joyAngle = rmath.atan360 ( joyY, joyX)
 
         #robot orientation with left analog stick
         horiz_move = joystick.get_axis(0)
-        vert_move = joystick.get_axis(1)
-        if abs(vert_move) > 0.05:
-            y += vert_move * 5
-        if abs(horiz_move) > 0.05:
-            x += horiz_move * 5
-        if abs(vert_move) > 0.05 or abs(horiz_move) > 0.05: #over ride the previous
-            h_move = horiz_move
-            v_move = vert_move
+        vert_move =  joystick.get_axis(1) # negative to make positive up
+        if abs(vert_move) >= minJoy or abs(horiz_move) >= minJoy: #over ride joyX and joyY
+            joyX = horiz_move
+            joyY = -vert_move # for common code below
+            joyAngle = rmath.joyatan360 ( -joyY, joyX)
 
         #robot movement with right analog stick
         horiz_move = joystick.get_axis(3)
-        vert_move = joystick.get_axis(4)
-        if abs(vert_move) > 0.05:
-            y += vert_move * 5
-        if abs(horiz_move) > 0.05:
-            x += horiz_move * 5
-        if abs(vert_move) > 0.05 or abs(horiz_move) > 0.05: #over ride the previous
-            h_move = horiz_move
-            v_move = vert_move
+        vert_move =  joystick.get_axis(4) # negative to make positive up
+        if abs(vert_move) >= minJoy or abs(horiz_move) >= minJoy: #over ride joyX and joyY
+            joyX = horiz_move
+            joyY = -vert_move # for common code below
+            joyAngle = rmath.joyatan360 ( -joyY, joyX)
 
-        #calculate the robotVector
-        robotVector = rmath.atan360 ( h_move, v_move)
-        #if v_move < 0 and h_move < 0:
-        #    robotVector -= 180
-        #if v_move < 0 and h_move > 0:
-        #    robotVector += 180
+        # ignore minor inputs from joysticks
+        if abs( joyX) <= minJoy:
+            joyX = 0
+        if abs( joyY) <= minJoy:
+            joyY = 0
 
-        #rotate robot with paddles or A-B buttons
-        if joystick.get_button(0): # A or right paddle, clockwise
-            robotHeading = rmath.constrain360( robotHeading + spinSpeeds[ spinSpeedMode.mode])
-            rotationMode.mode = 0 # turn off auto rotation
-        if joystick.get_button(1): # B or left paddle, counter clockwise
-            robotHeading = rmath.constrain360( robotHeading - spinSpeeds[ spinSpeedMode.mode])
-            rotationMode.mode = 0 # turn off auto rotation
 
-        #rotate robot to robot vector
-        if rotationMode.mode == 1 and abs( horiz_move) > 0.00005 and abs( vert_move) > 0.00005: # only when moving...
-            diff = rmath.constrain360( robotHeading - robotVector)
+        '''
+        There are three angles to worry about
+
+        robotPointing is direction of front of robot with respect to the venue
+
+        robotHeading is direction that the robot will move.
+            for swerve drive this is independent of the pointing
+            for tank drive this is either forward or backward in the direction of the robot
+
+        joyAngle is the direction commanded by the joystick
+            0,0 ==> no current command
+        '''
+        #calculate the joyVector
+        #joyAngle = rmath.atan360 ( joyY, joyX)
+        ##joyAngle = rmath.constrain360( 90 - rmath.atan360 ( joyX, joyY))
+        joyMagnitude = math.sqrt( joyY*joyY + joyX*joyX)
+        draw_text(f"Joy Angle: {joyAngle: 7.2f}",               font, pygame.Color("azure"), 10, yline( 20))
+        draw_text(f"Joy Magnitude: {joyMagnitude: 7.2f}",       font, pygame.Color("azure"), 10, yline( 21))
+        draw_text(f"joyX: {joyX: 5.2f}",       font, pygame.Color("azure"), 10, yline( 22))
+        draw_text(f"joyY: {joyY: 5.2f}",       font, pygame.Color("azure"), 10, yline( 23))
+
+        #rotate robot to joy stick angle
+        if rotationMode.mode == autoRotationMode and (joyX != 0 or joyY != 0): # only when moving...
+            diff = rmath.constrain360( robotPointing - joyAngle)
             if abs( diff ) > 3:
                 if diff > 0 and diff <180:
-                    robotHeading = rmath.constrain360( robotHeading - spinSpeeds[ spinSpeedMode.mode])
+                    robotPointing = rmath.constrain360( robotPointing - spinSpeeds[ spinSpeedMode.mode])
                 else:
-                    robotHeading = rmath.constrain360( robotHeading + spinSpeeds[ spinSpeedMode.mode])
+                    robotPointing = rmath.constrain360( robotPointing + spinSpeeds[ spinSpeedMode.mode])
             else:
-                robotHeading = rmath.constrain360( robotVector)
+                robotPointing = rmath.constrain360( joyAngle)
+            x += joyX * 5
+            y -= joyY * 5
 
-        if rotationMode.mode == 2 and abs( horiz_move) > 0.00005 and abs( vert_move) > 0.00005: # only when moving...
-            robotHeading = rmath.constrain360( robotHeading - spinSpeeds[ spinSpeedMode.mode]) # rotate clockwise
+        # use h_move and v_move to use the other controls
+        if rotationMode.mode == spinCWMode and (joyX != 0 or joyY != 0): # only when moving...
+            robotPointing = rmath.constrain360( robotPointing - spinSpeeds[ spinSpeedMode.mode]) # rotate clockwise
+            x += joyX * 5
+            y -= joyY * 5
 
-        if rotationMode.mode == 3 and abs( horiz_move) > 0.00005 and abs( vert_move) > 0.00005: # only when moving...
-            robotHeading = rmath.constrain360( robotHeading + spinSpeeds[ spinSpeedMode.mode]) # rotate counter clockwise
+        if rotationMode.mode == spinCCWMode and (joyX != 0 or joyY != 0): # only when moving...
+            robotPointing = rmath.constrain360( robotPointing + spinSpeeds[ spinSpeedMode.mode]) # rotate counter clockwise
+            x += joyX * 5
+            y -= joyY * 5
+
+        # tank mode
+        if rotationMode.mode == tankMode and (joyX != 0 or joyY != 0): # tank only when moving...
+            # robot turning has a priority and if within +/-90 follows the robot vector, otherwise it is in reverse
+            # velocity is controlled by the y coordinate of the joystick +forward, -backward
+            # turn rate is controlled by the x coordinate of the joystick -left, +right
+            robotPointing = rmath.constrain360( robotPointing + (spinSpeeds[ spinSpeedMode.mode] * joyX))
+            robotHeading = robotPointing
+            x = x + (math.sin( math.radians(robotHeading)) * joyY * 5)
+            y = y - (math.cos( math.radians(robotHeading)) * joyY * 5)
+            #print (f"tank {joyX: 7.2f}, {joyY: 7.2f}, joy:{joyMagnitude: 7.2f}, {joyAngle: 7.2f}, robot:{robotPointing: 7.2f}, heading:{robotHeading: 7.2f}")
+
+        if rotationMode.mode == tankFieldMode and (joyX != 0 or joyY != 0): # tank only when moving...
+            # want to rotate tank to joyAngle and move forward
+            # can move and turn if diff < +/- 90
+            # reverse: want angles reversed somehow so that right is right left is left...maybe...hold off for now
+            # hard right means move right fast
+            # hard left means move left fast
+            # hard forward means move forward fast
+            # hard backward means move backward fast
+            # this is really means diff is dependent on robotPointing
+            diff = rmath.constrain360( robotPointing - joyAngle)
+            if abs( diff ) > 3:
+                if abs( diff) < 45:
+                    robotHeading = robotPointing = rmath.constrain360( robotPointing - (diff /45))
+                elif abs( diff) < 135:
+                    robotHeading = robotPointing = rmath.constrain360( robotPointing - (diff /45))
+                else: # auto reverse
+                    robotPointing = rmath.constrain360( robotPointing + (diff /30))
+                    robotHeading = rmath.constrain360( robotPointing + 180)
+            else:
+                robotPointing = rmath.constrain360( joyAngle)
+            #if abs( diff) < 90:
+            #    #robotPointing = rmath.constrain360( robotPointing + spinSpeeds[ spinSpeedMode.mode])
+            #else:
+            #    robotPointing = rmath.constrain360( -robotPointing - diff/45 * spinSpeeds[ spinSpeedMode.mode])
+            robotHeading = robotPointing
+            x = x + (math.sin( math.radians(robotHeading)) * joyMagnitude * 5)
+            y = y - (math.cos( math.radians(robotHeading)) * joyMagnitude * 5)
+
+
+        #rotate robot manually with paddles or A-B buttons
+        if joystick.get_button(0): # A or right paddle, clockwise
+            robotPointing = rmath.constrain360( robotPointing + spinSpeeds[ spinSpeedMode.mode])
+            robotHeading = robotPointing
+            if rotationMode.mode != tankMode:
+                rotationMode.mode = 0 # turn off auto rotation
+            else:
+                robotHeading = robotPointing
+        if joystick.get_button(1): # B or left paddle, counter clockwise
+            robotPointing = rmath.constrain360( robotPointing - spinSpeeds[ spinSpeedMode.mode])
+            if rotationMode.mode != tankMode:
+                rotationMode.mode = 0 # turn off auto rotation
+            else:
+                robotHeading = robotPointing
 
     # keep the robot on the field
     robot.position = pygame.math.Vector2()
