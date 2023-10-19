@@ -229,11 +229,13 @@ while run:
 
         #move robot, but rotate only with paddles
         if rotationMode.mode == manualRotationMode and (joyX != 0 or joyY != 0): # only when moving...
+            robot.heading = joyAngle
             x += joyX * 5
             y -= joyY * 5
 
         #rotate robot to joy stick angle
         if rotationMode.mode == autoRotationMode and (joyX != 0 or joyY != 0): # only when moving...
+            robot.heading = joyAngle
             robot.turnTo( joyAngle)
             x += joyX * 5
             y -= joyY * 5
@@ -241,12 +243,14 @@ while run:
         # use h_move and v_move to use the other controls
         if rotationMode.mode == spinCWMode and (joyX != 0 or joyY != 0): # only when moving...
             #robotPointing = rmath.constrain360( robotPointing - robot.spinSpeeds[ robot.spinSpeedMode.mode]) # rotate clockwise
+            robot.heading = joyAngle
             robot.turnTo( robot.pointing - robot.spinSpeedMode.current())  # rotate clockwise
             x += joyX * 5
             y -= joyY * 5
 
         if rotationMode.mode == spinCCWMode and (joyX != 0 or joyY != 0): # only when moving...
             #robotPointing = rmath.constrain360( robotPointing + spinSpeeds[ spinSpeedMode.mode]) # rotate counter clockwise
+            robot.heading = joyAngle
             robot.turnTo( robot.pointing + robot.spinSpeedMode.current())  # rotate counter clockwise
             x += joyX * 5
             y -= joyY * 5
@@ -280,12 +284,13 @@ while run:
             #    #robotPointing = rmath.constrain360( robotPointing + robot.spinSpeeds[ robot.spinSpeedMode.mode])
             #else:
             #    robotPointing = rmath.constrain360( -robotPointing - diff/45 * robot.spinSpeeds[ robot.spinSpeedMode.mode])
-            robot.heading = robot.pointing
+            #robot.heading = robot.pointing
             x = x + (math.sin( math.radians(robot.heading)) * joyMagnitude * 5)
             y = y - (math.cos( math.radians(robot.heading)) * joyMagnitude * 5)
 
         # move to where joystick points, and turn robot to the north
         if rotationMode.mode == autoRotateNorth and (joyX != 0 or joyY != 0): # tank only when moving...
+            robot.heading = joyAngle
             robot.turnTo( 0)
             x += joyX * 5
             y -= joyY * 5
@@ -293,17 +298,20 @@ while run:
         # move to where joystick points, and turn robot to the south
         if rotationMode.mode == autoRotateSouth and (joyX != 0 or joyY != 0): # tank only when moving...
             robot.turnTo( 180)
+            robot.heading = joyAngle
             x += joyX * 5
             y -= joyY * 5
 
         # move to where joystick points, and turn robot to the east
         if rotationMode.mode == autoRotateEast and (joyX != 0 or joyY != 0): # tank only when moving...
+            robot.heading = joyAngle
             robot.turnTo( 90)
             x += joyX * 5
             y -= joyY * 5
 
         # move to where joystick points, and turn robot to the west
         if rotationMode.mode == autoRotateWest and (joyX != 0 or joyY != 0): # tank only when moving...
+            robot.heading = joyAngle
             robot.turnTo( 270)
             x += joyX * 5
             y -= joyY * 5
@@ -313,7 +321,6 @@ while run:
         if joystick.get_button(0): # A or right paddle, clockwise
             #robotPointing = rmath.constrain360( robotPointing + robot.spinSpeedMode.current())
             robot.turnTo( robot.pointing + robot.spinSpeedMode.current())
-            robot.heading = robot.pointing
             if rotationMode.mode == tankMode:
                 robot.heading = robot.pointing
             else:
