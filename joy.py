@@ -3,6 +3,7 @@ import rmath
 import math
 import mode
 import info
+import robot
 pygame.init()
 
 """SPECIAL CLASSES"""
@@ -38,30 +39,11 @@ autoRotateSouth = 7
 autoRotateEast = 8
 autoRotateWest = 9
 
-spinSpeedMode = mode.Mode ([ "5", "2.5", "1", "0.5"])
-spinSpeeds = [5, 2.5, 1, 0.5]
 joyAngle = 0
 joyMagnitude = 0
 minJoy = 0.0005
 
-button_A = 0
-button_B = 1
-button_X = 2
-button_Y = 3
 
-#define font
-font_size = 16
-font = pygame.font.SysFont("Futura", font_size)
-
-def yline ( line):
-    line_size = 15
-    base_line = 10
-    return base_line + line * line_size
-
-#function for outputting text onto the screen
-def draw_text(text, font, text_col, x, y):
-    img = font.render(text, True, text_col)
-    screen.blit(img, (x, y))
 
 # would be nice to extend joystick....
 def draw_joy ( controller, joyinfo):
@@ -70,7 +52,7 @@ def draw_joy ( controller, joyinfo):
        line is the starting line number
        controller is the joystick controller object
     '''
-    joyinfo.drawln (f"Controller number: {controller.get_instance_id()}", 0)
+    joyinfo.drawln (f"Controller number: {controller.get_instance_id()}", 1)
     joyinfo.drawln (f"Battery Level: {controller.get_power_level()}")
     joyinfo.drawln (f"Controller Type: {controller.get_name()}")
     numAxes = controller.get_numaxes()
@@ -94,279 +76,16 @@ def draw_joy ( controller, joyinfo):
     for hat in range(hats):
         joyinfo.drawln (f"Hat {hat}: {controller.get_hat( hat)}")
         
-
-'''
-class Chord (): # this whole thing is tied to a controller...
-    def __define__():
-        buttons = []      #list of active button indices
-        buttonStates = [] #list of button states 
-        lastChordStates = [] #list of last button/chord states 
-        pressChordActions = {} # dictionary of chord actions
-
-    def onPress (buttonIndices, action):
-        for buttonIndex in buttonIndices
-            if buttonIndex not in self.buttons:
-                add it to self.buttons
-                add idle cord state for buttonIndices
-        if buttonIndices is in chordActions:
-            remove the old entry
-        add buttonIndices to the chordActions
-        add lastChordState  = idle
+    # really want this to be for each robot.
+    joyinfo.drawln (f"Elevator Mode: {elevatorMode.current()}", 20)
+    joyinfo.drawln (f"Rotation Mode: {rotationMode.current()}")
+    joyinfo.drawln (f"Rotation Speed: {robot.spinSpeedMode.current()}")
+    joyinfo.drawln (f"Pointing Angle: {robot.pointing: 7.2f}")
+    joyinfo.drawln (f"Heading Angle: {robot.heading: 7.2f}")
     
-    def check():
-        self.buttonStates = [] # reset the list
-        for button in range (self.buttons):
-            if controller.get_button( button):
-                self.buttonStates.append (button) # buttons not on list are idle
-        for chordAction in chordActions
-            released = true
-            pressed = true
-            for button in chordAction[0]:  #all buttons have to be same to alter chord state
-                released &= !self.buttonStates[ button]   # any pressed button will make false
-                pressed &= self.buttonStates[ button]    # any released button will make false
-            if pressed:
-                if !self.lastChordStates( chordAction[0]):
-                    #perform the action for the chord
-                    action = chordAction[1]
-                    action()
-                    self.lastChordStates( chordAction[0]) = True
-            elif released:
-                self.lastChordStates( chordAction[0]) = False
-
-chord = Chord()            
-
-chord.onPress(5, ()->print("button 5 pressed"))
-chord.onPress(4, ()->print("button 4 pressed"))
-chord.onPress((4,5), ()->print("buttons 4 and 5 pressed"))
-'''
-'''
-Also need to have a configuration to map buttons, hats and axes to functions
-Play around with chords for a while
-
-class Chord ():
-    data
-        list of Buttons (like: 0,1,2,3,01,23,02,13)
-        current button state
-        last button state
-        buttons action dictionary
-    def __init__:
-        create chord
-        create empty list of buttons
-        create empty button-action dictionary
-    def checkChords():
-        read the list of buttons
-        determine which have just been pressed
-        do the action for the button/buttons pressed
-    def onButton (button, action): ... one time action
-        add button to scan list
-        add (button, action) to buttons action dictionary
-    def while (button, action): ... repeated action
-        add button
-        add (button, action) to buttons action dictionary
-
-This has state... for the buttonActionDictionary and the last state of the list of buttons
-onButton... could add entries to the buttonActionDictionary and the list of buttons
-
-Start small and then build up... start with the paddles and maybe the tank mode switch
-  eventually get rid of the isEdge function out of the Mode module
-
-  Modes are part of a robot, and switch and chord states is part of a robot
-  These are connected only by assignment... this button controls that mode
-'''
-
-
-# this should be a database if other types of controller are allowed
-# button indices
-BUTTON_A_INDEX = 0
-BUTTON_B_INDEX = 1
-BUTTON_X_INDEX = 2
-BUTTON_Y_INDEX = 3
-
-RIGHT_PADDLE = 0
-LEFT_PADDLE = 1
-
-
-#class Controller (pygame.joystick.Joystick):
-#    """ A class for a generic XBOX joystick and its current state"""
-#    def id_check( self):
-#        print (f"Id for controller is {self.device_index}")
-        
-'''
-    def __init__(self, device_index):
-        super().__init__( device_index)
-        #super.device_index = device_index
-        #self.device_index = index
-        ### BUTTONS on generic XBOX controller
-
-        ### Button states
-        self.buttonA = False
-        self.buttonB = False
-        self.buttonX = False
-        self.buttonY = False
-
-        ### Button past states
-        self.buttonAlast = False
-        self.buttonBlast = False 
-        self.buttonXlast = False
-        self.buttonYlast = False
-        self.buttonABlast = False
-        self.buttonXYlast = False
-        self.buttonAXlast = False
-        self.buttonBYlast = False
-
-        # past button and chord states
-        buttonAlast = False
-        buttonBlast = False 
-        buttonXlast = False
-        buttonYlast = False
-        buttonABlast = False
-        buttonXYlast = False
-        buttonAXlast = False
-        buttonBYlast = False
-'''
-'''
-    def readButtons( self):     # this needs to be done once a frame to load current button states
-        self.buttonA = joystick.get_button( self.BUTTON_A_INDEX)
-        self.buttonB = joystick.get_button( self.BUTTON_B_INDEX)
-        self.buttonX = joystick.get_button( self.BUTTON_X_INDEX)
-        self.buttonY = joystick.get_button( self.BUTTON_Y_INDEX)
-
-
-    def whileButtonA ( self, funct):
-        if self.buttonA and not ( self.buttonB or self.buttonX or self.buttonY):
-            self.buttonAlast = True
-            funct()
-        else:
-            self.buttonAlast = True
-
-
-    def onButtonA ( self, funct):
-        if not self.buttonAlast:
-            if not ( self.buttonB or self.buttonX or self.buttonY):
-                funct()
-            self.buttonAlast = True
-        else:
-            self.buttonAlast = False
-
-
-    def onButtonB ( self, funct):
-        if not self.buttonBlast:
-            if not ( self.buttonA or self.buttonX or self.buttonY):
-                funct()
-            self.buttonBlast = True
-        else:
-            self.buttonBlast = False
-
-
-    def onButtonX ( self, funct):
-        if not self.buttonXlast:
-            if not ( self.buttonA or self.buttonB or self.buttonY):
-                funct()
-            self.buttonXlast = True
-        else:
-            self.buttonXlast = False
-
-
-    def onButtonY ( self, funct):
-        if not self.buttonYlast:
-            if not ( self.buttonA or self.buttonB or self.buttonX):
-                funct()
-            self.buttonYlast = True
-        else:
-            self.buttonYlast = False
-
-
-    def onButtonAB ( self, funct):
-        if not self.buttonABlast:
-            if not ( self.buttonX or self.buttonY):
-                funct()
-            self.buttonABlast = True
-            self.buttonBlast = False
-            self.buttonBlast = False
-        else:
-            self.buttonABlast = False
-
-
-    def onButtonXY ( self, funct):
-        if not self.buttonXYlast:
-            if not ( self.buttonA or self.buttonB):
-                funct()
-            self.buttonXYlast = True
-            self.buttonXlast = False
-            self.buttonYlast = False
-        else:
-            self.buttonXYlast = False
-
-
-    def onButtonAX ( self, funct):
-        if not self.buttonAXlast:
-            if not ( self.buttonB or self.buttonY):
-                funct()
-            self.buttonAXlast = True
-            self.buttonAlast = False
-            self.buttonXlast = False
-        else:
-            self.buttonAXlast = False
-
-
-    def onButtonBY ( self, funct):
-        if not self.buttonBYlast:
-            if not ( self.buttonA or self.buttonX):
-                funct()
-            self.buttonBYlast = True
-            self.buttonBlast = False
-            self.buttonYlast = False
-        else:
-                self.buttonBYlast = False
-'''
-
-class Robot(pygame.sprite.Sprite):
-    def __init__(self, position=(0, 0)):
-        super(Robot, self).__init__()
-        self.original_image = pygame.Surface((32, 32))
-        #pygame.draw.lines(self.original_image, robotColor, True, [( 0,0),  (31,0),  (31,13), (8,13),
-        #                                                            (8,9),   (4,9),   (4,21), (8,21),
-        #                                                            (9,17), (31,17), (31,31), (0,31)])
-        pygame.draw.lines(self.original_image, robotColor, True, [( 0,0),  (31,0),  (31,31),  (0,31),
-                                                                   ( 0,17), (23,17), (23,21), (27,21),
-                                                                   (27,9),  (23,9),  (23,13),  (0,13)])
-        self.image = self.original_image  # This will reference our rotated copy.
-        self.rect  = self.image.get_rect()
-        self.position = pygame.math.Vector2(*position)
-        self.pointing = 0
-        self.heading = 0
-
-    def update(self):
-        # Create the rotated copy.
-        # py image has y down and 0 to the right, hence 90-angle
-        self.image = pygame.transform.rotate(self.original_image, rmath.constrain360( 90-self.pointing)).convert()  # Angle is absolute value!
-
-        # Make sure your rect represent the actual Surface.
-        self.rect = self.image.get_rect()
-
-        # Since the dimension probably changed you should move its center back to where it was.
-        self.rect.center = self.position.x, self.position.y
-            
-    def turnTo( self, angle):
-        diff = rmath.constrain360( self.pointing - angle)
-        if abs( diff ) > 3:
-            if diff > 0 and diff <180:
-                self.pointing = rmath.constrain360( self.pointing - spinSpeeds[ spinSpeedMode.mode])
-            else:
-                self.pointing = rmath.constrain360( self.pointing + spinSpeeds[ spinSpeedMode.mode])
-        else:
-            self.pointing = angle
-            
-    def turnCW():
-        robot.turnTo( robot.pointing + spinSpeeds[ spinSpeedMode.mode])
-            
-    def turnCCW():
-        robot.turnTo( robot.pointing - spinSpeeds[ spinSpeedMode.mode])
 
 
 
-"""CONSTANTS"""
-robotColor = (255,0,0)
 
 #define screen size
 SCREEN_WIDTH = 1200
@@ -391,10 +110,9 @@ font = pygame.font.SysFont("Futura", 16)
 joytext = info.Info ( screen, {'x': 500, 'y': 20}, font, 15 ) 
 
 
-robotColor  = "royalblue"
 x = 350
 y = 200
-robot = Robot(position=(x,y))  #define robot
+robot = robot.Robot(position=(x,y), color = "royalblue")  #define robot
 
 # these need to be part of a Class definition..#game loop
 run = True
@@ -420,19 +138,12 @@ while run:
     screen.fill(pygame.Color("midnightblue"))
 
     #show number of connected joysticks
-    draw_text("Controllers: " + str(pygame.joystick.get_count()), font, pygame.Color("azure"), 10, yline(0))
+    joyinfo.drawln (f"Controllers: {pygame.joystick.get_count()}", 0)
     for i, joystick in enumerate( joysticks):
         joyinfo = joyinfos [i]
         draw_joy( joystick, joyinfo)
 
 
-        # really want this to be for each robot.
-        joyinfo.drawln (f"Elevator Mode: {elevatorMode.current()}", 15)
-        joyinfo.drawln (f"Rotation Mode: {rotationMode.current()}")
-        joyinfo.drawln (f"Rotation Speed: {spinSpeedMode.current()}")
-        joyinfo.drawln (f"Pointing Angle: {robot.pointing: 7.2f}")
-        joyinfo.drawln (f"Heading Angle: {robot.heading: 7.2f}")
-        
         ''' mode control
         each press advances the mode by one
         X0-normal
@@ -454,8 +165,8 @@ while run:
         if rotationMode.isEdge ( joystick.get_button(2)):
             rotationMode.advanceCyclic()
 
-        if spinSpeedMode.isEdge ( joystick.get_button(5)):
-            spinSpeedMode.advanceCyclic()
+        if robot.spinSpeedMode.isEdge ( joystick.get_button(5)):
+            robot.spinSpeedMode.advanceCyclic()
 
         '''
         joystick.onButtonAB( ( lambda autoRotationSouth : rotationMode.set( autoRotationSouth) ) )
@@ -529,14 +240,14 @@ while run:
 
         # use h_move and v_move to use the other controls
         if rotationMode.mode == spinCWMode and (joyX != 0 or joyY != 0): # only when moving...
-            #robotPointing = rmath.constrain360( robotPointing - spinSpeeds[ spinSpeedMode.mode]) # rotate clockwise
-            robot.turnTo( robot.pointing - spinSpeeds[ spinSpeedMode.mode])  # rotate clockwise
+            #robotPointing = rmath.constrain360( robotPointing - robot.spinSpeeds[ robot.spinSpeedMode.mode]) # rotate clockwise
+            robot.turnTo( robot.pointing - robot.spinSpeedMode.current())  # rotate clockwise
             x += joyX * 5
             y -= joyY * 5
 
         if rotationMode.mode == spinCCWMode and (joyX != 0 or joyY != 0): # only when moving...
             #robotPointing = rmath.constrain360( robotPointing + spinSpeeds[ spinSpeedMode.mode]) # rotate counter clockwise
-            robot.turnTo( robot.pointing + spinSpeeds[ spinSpeedMode.mode])  # rotate counter clockwise
+            robot.turnTo( robot.pointing + robot.spinSpeedMode.current())  # rotate counter clockwise
             x += joyX * 5
             y -= joyY * 5
 
@@ -545,8 +256,8 @@ while run:
             # robot turning has a priority and if within +/-90 follows the robot vector, otherwise it is in reverse
             # velocity is controlled by the y coordinate of the joystick +forward, -backward
             # turn rate is controlled by the x coordinate of the joystick -left, +right
-            #robotPointing = rmath.constrain360( robotPointing + (spinSpeeds[ spinSpeedMode.mode] * joyX))
-            robot.turnTo( robot.pointing - spinSpeeds[ spinSpeedMode.mode] * joyX)
+            #robotPointing = rmath.constrain360( robotPointing + (robot.spinSpeeds[ robot.spinSpeedMode.mode] * joyX))
+            robot.turnTo( robot.pointing - robot.spinSpeedMode.mode  * joyX)
             robot.heading = robot.pointing
             x = x + (math.sin( math.radians(robot.heading)) * joyY * 5)
             y = y - (math.cos( math.radians(robot.heading)) * joyY * 5)
@@ -566,9 +277,9 @@ while run:
             else:
                 robot.pointing = rmath.constrain360( joyAngle)
             #if abs( diff) < 90:
-            #    #robotPointing = rmath.constrain360( robotPointing + spinSpeeds[ spinSpeedMode.mode])
+            #    #robotPointing = rmath.constrain360( robotPointing + robot.spinSpeeds[ robot.spinSpeedMode.mode])
             #else:
-            #    robotPointing = rmath.constrain360( -robotPointing - diff/45 * spinSpeeds[ spinSpeedMode.mode])
+            #    robotPointing = rmath.constrain360( -robotPointing - diff/45 * robot.spinSpeeds[ robot.spinSpeedMode.mode])
             robot.heading = robot.pointing
             x = x + (math.sin( math.radians(robot.heading)) * joyMagnitude * 5)
             y = y - (math.cos( math.radians(robot.heading)) * joyMagnitude * 5)
@@ -600,16 +311,16 @@ while run:
 
         #rotate robot manually with paddles or A-B buttons
         if joystick.get_button(0): # A or right paddle, clockwise
-            #robotPointing = rmath.constrain360( robotPointing + spinSpeeds[ spinSpeedMode.mode])
-            robot.turnTo( robot.pointing + spinSpeeds[ spinSpeedMode.mode])
+            #robotPointing = rmath.constrain360( robotPointing + robot.spinSpeedMode.current())
+            robot.turnTo( robot.pointing + robot.spinSpeedMode.current())
             robot.heading = robot.pointing
             if rotationMode.mode == tankMode:
                 robot.heading = robot.pointing
             else:
                 rotationMode.mode = manualRotationMode # turn off auto rotation
         if joystick.get_button(1): # B or left paddle, counter clockwise
-            #robotPointing = rmath.constrain360( robotPointing - spinSpeeds[ spinSpeedMode.mode])
-            robot.turnTo( robot.pointing - spinSpeeds[ spinSpeedMode.mode])
+            #robotPointing = rmath.constrain360( robotPointing - robot.spinSpeedMode.current())
+            robot.turnTo( robot.pointing - robot.spinSpeedMode.current())
             if rotationMode.mode == tankMode:
                 robot.heading = robot.pointing
             else:

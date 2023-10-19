@@ -2,7 +2,7 @@
 
 class Mode:
 
-    def __init__( self, modes):
+    def __init__( self, modes): #modes has to be a dictionary of key, value pairs, keys are numeric, values are strings
         self.modes = modes
         self.mode = 0
         self.lastTrigger = 0
