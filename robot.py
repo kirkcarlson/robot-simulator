@@ -44,7 +44,7 @@ class Robot(pygame.sprite.Sprite):
             self.pointing = angle
             
     def turnCW():
-        robot.turnTo( robot.pointing + self.spinSpeedMode.current())
+        self.turnTo( robot.pointing + self.spinSpeedMode.current())
             
     def turnCCW():
-        robot.turnTo( robot.pointing - self.spinSpeedMode.current())
+        self.turnTo( robot.pointing - self.spinSpeedMode.current())
