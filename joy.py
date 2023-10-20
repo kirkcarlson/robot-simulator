@@ -297,8 +297,8 @@ while run:
 
         # move to where joystick points, and turn robot to the south
         if rotationMode.mode == autoRotateSouth and (joyX != 0 or joyY != 0): # tank only when moving...
-            robot.turnTo( 180)
             robot.heading = joyAngle
+            robot.turnTo( 180)
             x += joyX * 5
             y -= joyY * 5
 
@@ -315,7 +315,7 @@ while run:
             robot.turnTo( 270)
             x += joyX * 5
             y -= joyY * 5
-
+            
 
         #rotate robot manually with paddles or A-B buttons
         if joystick.get_button(0): # A or right paddle, clockwise
