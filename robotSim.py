@@ -1,28 +1,30 @@
+# robotSim -- Robot Simulator to evaluate with joystick controls
 import pygame
 import rmath
 import math
 import mode
 import info
 import robot
+import buttonManager
 pygame.init()
 
 """SPECIAL CLASSES"""
 """
 need to refactor to make modules smaller:
-  - controller stuff ... and allow more than one
-  - chord 
-  - screen printing stuff ... part of controller and robot?
-  - robot stuff ... and allow more than one
-  - field stuff
+  - [_] controller stuff ... and allow more than one
+  - [x] chord  = button Manager
+  - [_] screen printing stuff ... part of controller and robot?
+  - [_] robot stuff ... and allow more than one
+  - [_] field stuff
 need to define a better Class for
 - Joysticks
-  * modes states
-  * temporary variables
-  * button names
+  * [_] modes states
+  * [_] temporary variables
+  * [_] button names
 - Robot
-  * position
-  * heading
-  * pointing angle
+  * [_] position
+  * [_] heading
+  * [_] pointing angle
 
 maybe use enums with Mode to tie names and values easier
 """
@@ -39,9 +41,19 @@ autoRotateSouth = 7
 autoRotateEast = 8
 autoRotateWest = 9
 
+buttonManager = buttonManager.ButtonManager()
+# set up the chords and actions
+buttonManager.onPress([0,1], lambda : print("South Engaged"))
+buttonManager.onPress([2,3], lambda : print("North Engaged"))
+buttonManager.onPress([0,2], lambda : print("West Engaged"))
+buttonManager.onPress([1,3], lambda : print("East Engaged"))
+
+### CONSTANTS ###""
+minJoy = 0.0005
+
+### VARIABLES ###
 joyAngle = 0
 joyMagnitude = 0
-minJoy = 0.0005
 
 
 
@@ -84,7 +96,60 @@ def draw_joy ( controller, joyinfo):
     joyinfo.drawln (f"Heading Angle: {robot.heading: 7.2f}")
     
 
+def driveByJoystickRotateToNorth():
+    #need to read joystick and compute joyAngle    
+    if (joyX != 0 or joyY != 0): # turn robot only when otherwise moving...
+        robot.heading = joyAngle
+        robot.turnTo( 0)
+        x += joyX * 5
+        y -= joyY * 5
 
+
+def driveByJoystickRotateToEast():
+    #need to read joystick and compute joyAngle    
+    if (joyX != 0 or joyY != 0): # turn robot only when otherwise moving...
+        robot.heading = joyAngle
+        robot.turnTo( 90)
+        x += joyX * 5
+        y -= joyY * 5
+
+
+def driveByJoystickRotateToSouth():
+    #need to read joystick and compute joyAngle    
+    if (joyX != 0 or joyY != 0): # turn robot only when otherwise moving...
+        robot.heading = joyAngle
+        robot.turnTo( 180)
+        x += joyX * 5
+        y -= joyY * 5
+
+
+def driveByJoystickRotateToWest():
+    #need to read joystick and compute joyAngle    
+    if (joyX != 0 or joyY != 0): # turn robot only when otherwise moving...
+        robot.heading = joyAngle
+        robot.turnTo( 270)
+        x += joyX * 5
+        y -= joyY * 5
+
+
+
+def autoRotateToNorth():
+    rotationMode.mode == autoRotateNorth
+    #driveByJoystick = lambda : driveByJoystickRotateToNorth()
+
+
+def autoRotateToEast():
+    rotationMode.mode == autoRotateEast
+    #driveByJoystick = lambda : driveByJoystickRotateToEast()
+
+
+def autoRotateToSouth():
+    rotationMode.mode == autoRotateSouth
+    #driveByJoystick = lambda : driveByJoystickRotateToSouth()
+
+def autoRotateToWest():
+    rotationMode.mode == autoRotateWest
+    #driveByJoystick = lambda : driveByJoystickRotateToWest()
 
 
 #define screen size
@@ -136,6 +201,17 @@ while run:
                 run = False
     #fill in background
     screen.fill(pygame.Color("midnightblue"))
+    
+    # Execute joystick actions
+    activeJoyButtons = []
+    for joyButton in range (controller.get_numbuttons()):
+        #print(f" hi {joyButton} {activeJoyButtons} {controller.get_button( joyButton)}")
+        if controller.get_button( joyButton):
+            #print (f"button {joyButton} is active {activeJoyButtons}")
+            activeJoyButtons.append( joyButton)
+    #print(f" hi {activeJoyButtons} {controller.get_numbuttons()}" )
+    #joyManager.buttonList = activeJoyButtons
+    buttonManager.check( activeJoyButtons)
 
     #show number of connected joysticks
     joyinfo.drawln (f"Controllers: {pygame.joystick.get_count()}", 0)
@@ -164,16 +240,40 @@ while run:
 
         if rotationMode.isEdge ( joystick.get_button(2)):
             rotationMode.advanceCyclic()
+            if rotationMode == autoRotateNorth:
+                autoRotateToNorth()
+            elif rotationMode == autoRotateEast:
+                autoRotateToEast()
+            if rotationMode == autoRotateSouth:
+                autoRotateToSouth()
+            elif rotationMode == autoRotateWest:
+                autoRotateToWest()
+
+        # move to where joystick points, and turn robot to the south
+        if rotationMode.mode == autoRotateSouth and (joyX != 0 or joyY != 0): # tank only when moving...
+            robot.heading = joyAngle
+            robot.turnTo( 180)
+            x += joyX * 5
+            y -= joyY * 5
+
+        # move to where joystick points, and turn robot to the east
+        if rotationMode.mode == autoRotateEast and (joyX != 0 or joyY != 0): # tank only when moving...
+            robot.heading = joyAngle
+            robot.turnTo( 90)
+            x += joyX * 5
+            y -= joyY * 5
+
+        # move to where joystick points, and turn robot to the west
+        if rotationMode.mode == autoRotateWest and (joyX != 0 or joyY != 0): # tank only when moving...
+            robot.heading = joyAngle
+            robot.turnTo( 270)
+            x += joyX * 5
+            y -= joyY * 5
+
 
         if robot.spinSpeedMode.isEdge ( joystick.get_button(5)):
             robot.spinSpeedMode.advanceCyclic()
 
-        '''
-        joystick.onButtonAB( ( lambda autoRotationSouth : rotationMode.set( autoRotationSouth) ) )
-        joystick.onButtonXY( ( lambda autoRotationNorth : rotationMode.set( autoRotationNorth) ) )
-        joystick.onButtonAX( ( lambda autoRotationWest : rotationMode.set( autoRotationWest) ) )
-        joystick.onButtonBY( ( lambda autoRotationEast : rotationMode.set( autoRotationEast) ) )
-        '''
 
 
         ### get joystick vectors
@@ -332,7 +432,7 @@ while run:
                 robot.heading = robot.pointing
             else:
                 rotationMode.mode = manualRotationMode # turn off auto rotation
-        #chord.check()
+        #buttonManager.check()
 
     # keep the robot on the field
     robot.position = pygame.math.Vector2()

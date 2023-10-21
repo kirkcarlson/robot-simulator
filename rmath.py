@@ -1,7 +1,7 @@
 """ROBOT MATH FUNCTIONS"""
 import math
 
-DEBUG = True
+DEBUG = False
 
 def dprint( string):
     if DEBUG:

@@ -1,4 +1,4 @@
-'''Chord class for detecting single button and button group presses'''
+'''buttonManager class for detecting single button and button group presses'''
 
 #### CONSTANTS ####
 DEBUG = True
@@ -16,7 +16,7 @@ def dprint( string):
     if DEBUG:
         print( string)
 
-class Chord (): # this whole thing is tied to a controller...
+class ButtonManager (): # this whole thing is tied to a controller...
     # a chord is a list of one or more buttons
     def __init__( self):
         self.monitoredButtons = []           # list of buttons being monitored
@@ -143,13 +143,16 @@ class Chord (): # this whole thing is tied to a controller...
                 self.chordActions[i]['state'] = IDLE
 
 
-    def check( self):
-        # make buttonActivity a list of active buttons
+    def getActiveButtons( self):
         buttonActivity = []
         for button in self.monitoredButtons:
             if controller.get_button( button):
                 buttonActivity.append (button) # only active buttons are on list
-        dprint (f"    check called, monitoring:{self.monitoredButtons} active:{buttonActivity}")
+        return buttonActivity
+
+
+    def check( self, activeButtons):
+        dprint (f"    check called, monitoring:{self.monitoredButtons} active:{activeButtons}")
 
         for i in range( len( self.chordActions)):
             key = self.chordActions[i]['chord']
@@ -157,8 +160,8 @@ class Chord (): # this whole thing is tied to a controller...
             released = True
             pressed = True
             for button in key:  #all buttons have to be same to alter chord state
-                released &= button not in buttonActivity   # any pressed button will make False
-                pressed &= button in buttonActivity    # any released button will make False
+                released &= button not in activeButtons   # any pressed button will make False
+                pressed &= button in activeButtons    # any released button will make False
             if pressed:
                 dprint (f"            active chord:{key} : {self.chordActions[i]}")
                 if self.chordActions[i]['state'] == IDLE: # making inactive to active transition
@@ -229,7 +232,7 @@ def progress (comment, start=None):
     dprint (f"Step {count}: {comment}")
     count += 1
 
-keyManager = Chord()
+keyManager = ButtonManager()
 controller = Tester()
 progress("\n\nStarting up")
 keyManager.onPress(       5, lambda : print("button 5 pressed"))
@@ -242,50 +245,42 @@ progress('')
 print (f"active buttons {keyManager.monitoredButtons}")
 print (f"active actions {keyManager.chordActions}")
 progress( 'should see "button 4 pressed"')
-controller.setButtonList( [4])
-keyManager.check()
+keyManager.check( [4])
 progress('')
-keyManager.check()
+keyManager.check( [4])
 
 progress( 'should see "button 4 released"')
-controller.setButtonList( [])
-keyManager.check()
+keyManager.check( [])
 progress('')
-keyManager.check()
+keyManager.check( [])
 
 progress( 'should see "button 5 pressed"')
-controller.setButtonList( [5])
-keyManager.check()
+keyManager.check( [5])
 progress('')
-keyManager.check()
+keyManager.check( [5])
 
 progress( 'should see "chord 4 5 pressed"')
-controller.setButtonList( [4, 5])
-keyManager.check()
+keyManager.check( [4, 5])
 progress('')
-keyManager.check()
+keyManager.check( [4, 5])
 
 progress( 'chord 4 5 is holding until all released"')
-controller.setButtonList( [4])
-keyManager.check()
+keyManager.check( [4])
 progress('')
-keyManager.check()
+keyManager.check( [4])
 
 progress('should see "button 4 5 released"')
-controller.setButtonList( [])
-keyManager.check()
-keyManager.check()
+keyManager.check( [])
+keyManager.check( [])
 
 progress('should not see anything')
 keyManager.onPress( (5,4), lambda : print("chord 5 4 pressed"))
-keyManager.check()
+keyManager.check( [])
 print(f"chord actions: {keyManager.chordActions}")
 
 progress('should see "button 4 5 pressed"')
-controller.setButtonList( [5,4])
-keyManager.check()
+keyManager.check( [5,4])
 
 progress('should see "button 4 5 released"')
-controller.setButtonList( [])
-keyManager.check()
+keyManager.check( [])
 
