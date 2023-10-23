@@ -68,7 +68,7 @@ class ButtonManager (): # this whole thing is tied to a controller...
         self._addActionToChordActions( chord, action, 'while')
 
 
-    def _removeActionFromChordActions (self, chord, action, actionType): # remove button-action from chordActions
+    def _removeActionFromChordActions (self, chord, actionType): # remove button-action from chordActions
         chord.sort() # to make sure buttons in same order for compare to work
         for i in range (len(self.chordActions)):
             if self.chordActions[i]['chord'] == chord:
@@ -81,15 +81,15 @@ class ButtonManager (): # this whole thing is tied to a controller...
 
     
     def removeOnPress( self, chord):
-        self._removeActionFromChordActions (chord, action, 'press') # remove button-action from chordActions
+        self._removeActionFromChordActions (chord, 'press') # remove button-action from chordActions
 
 
     def removeOnRelease( self, chord):
-        self._removeActionFromChordActions (chord, action, 'release') # remove button-action from chordActions
+        self._removeActionFromChordActions (chord, 'release') # remove button-action from chordActions
 
 
     def removeWhile( self, chord):
-        self._removeActionFromChordActions (chord, action, 'while') # remove button-action from chordActions
+        self._removeActionFromChordActions (chord, 'while') # remove button-action from chordActions
 
 
     def removeChord( self, chord):
