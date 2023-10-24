@@ -1,7 +1,7 @@
 '''buttonManager class for detecting single button and button group presses'''
 
 #### CONSTANTS ####
-DEBUG = True
+DEBUG = False
 
 LEFT_JOY_BUTTON  =  9
 RIGHT_JOY_BUTTON = 10
@@ -16,9 +16,10 @@ def dprint( string):
     if DEBUG:
         print( string)
 
-class ButtonManager (): # this whole thing is tied to a controller...
+class ButtonManager (): # this whole thing is tied to a joystick...
     # a chord is a list of one or more buttons
-    def __init__( self):
+    def __init__( self, joystick):
+        self.joystick = joystick
         self.monitoredButtons = []           # list of buttons being monitored
         self.chordActions = []      # list of chordAction dictionaries
                                     # [ {'chord': chord,    ... sorted list of keys
@@ -104,7 +105,7 @@ class ButtonManager (): # this whole thing is tied to a controller...
     def _getChordActivity( self, chord):
         activity = PRESSED
         for button in chord:
-            if not controller.get_button( button):
+            if not self.joystick.get_button( button):
                 activity = IDLE
                 break
         return activity
@@ -146,7 +147,7 @@ class ButtonManager (): # this whole thing is tied to a controller...
     def getActiveButtons( self):
         buttonActivity = []
         for button in self.monitoredButtons:
-            if controller.get_button( button):
+            if self.joystick.get_button( button):
                 buttonActivity.append (button) # only active buttons are on list
         return buttonActivity
 
@@ -171,6 +172,8 @@ class ButtonManager (): # this whole thing is tied to a controller...
                     self.chordActions[i]['state'] = PRESSED
                     self._overrideSubsets( key)
                     dprint(f"        double check on chordActions:{self.chordActions[i]}")
+                elif self.chordActions[i]['state'] == OVERRIDDEN: # button is part of another chord
+                    pass
                 else: # chord is being held, so WHILE is True
                     if 'while' in self.chordActions[i]:
                         self.chordActions[i][ 'while'] ()
@@ -208,7 +211,7 @@ Start small and then build up... start with the paddles and maybe the tank mode 
 '''
 ################################test code
 
-
+''' DEBUG CODE
 class Tester ():
     def __init__(self):
         self. buttonList = []
@@ -232,8 +235,8 @@ def progress (comment, start=None):
     dprint (f"Step {count}: {comment}")
     count += 1
 
-keyManager = ButtonManager()
 controller = Tester()
+keyManager = ButtonManager( controller)
 progress("\n\nStarting up")
 keyManager.onPress(       5, lambda : print("button 5 pressed"))
 keyManager.onRelease(     5, lambda : print("button 5 released"))
@@ -284,3 +287,5 @@ keyManager.check( [5,4])
 progress('should see "button 4 5 released"')
 keyManager.check( [])
 
+
+'''

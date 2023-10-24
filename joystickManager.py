@@ -19,19 +19,22 @@ class Vector ():
     def to_str( self):
         return f"x:{self.x: 4.2f} y:{self.x: 4.2f} ang:{self.angle: 6.2f} mag:{self.magnitude: 4.2f}"
 
-class joystickManager ():
+class JoystickManager ():
     def __init__(self, joystick):
         self.joystick = joystick # raw joystick device
-        self.buttonManager = buttonManager.ButtonManager() # button manager to execute actions on button presses
+        #print ("dir (self.joystick) in JoystickManager")
+        #print (dir (self.joystick))
+        #print (f"joystick.get_instance: { self.joystick.get_instance_id()}\n\n")
+        self.buttonManager = buttonManager.ButtonManager( joystick) # button manager to execute actions on button presses
         self.rightJoy = Vector()
         self.leftJoy = Vector()
         self.hat = Vector()
-        self.combinedJoyList = [ self.RightJoy, self.LeftJoy, self.hat]
+        self.combinedJoyList = [ self.rightJoy, self.leftJoy, self.hat]
         self.combinedJoy = Vector()
-        self.lefTrigger = 0
+        self.leftTrigger = 0
         self.rightTrigger = 0
 
-    def setCombinedJoys ( self, listOfJoys):
+    def setCombinedJoyList ( self, listOfJoys):
         if not isinstance( listOfJoys, list):
             listOfJoys = list( listOfJoys)
         self.combinedJoyList = listOfJoys
@@ -44,7 +47,7 @@ class joystickManager ():
         #joyAngle = rmath.atan360 ( joyY, joyX)
         self.hat.x = move [0]
         self.hat.y = move [1] # positive is forward
-        self.hat.angle = rmath.atan360( self.hat.y / self.hat.x)
+        self.hat.angle = rmath.atan360( self.hat.x, self.hat.y)
         self.hat.magnitude = math.sqrt( self.hat.y * self.hat.y + self.hat.x * self.hat.x)
 
         # left stick
@@ -60,12 +63,8 @@ class joystickManager ():
             self.leftJoy.x = 0
         if abs( self.leftJoy.y ) <= DEAD_ZONE:
             self.leftJoy.y = 0
-        if self.leftJoy.x != 0 or self.leftJoy.y != 0:
-            self.leftJoy.angle = rmath.atan360( self.leftJoy.y / self.leftJoy.x)
-            self.leftJoy.magnitude = math.sqrt( self.leftJoy.y * self.leftJoy.y + self.leftJoy.x * self.leftJoy.x)
-        else:
-            self.leftJoy.angle = 0
-            self.leftJoy.magnitude = 0
+        self.leftJoy.angle = rmath.atan360( self.leftJoy.x, self.leftJoy.y)
+        self.leftJoy.magnitude = math.sqrt( self.leftJoy.y * self.leftJoy.y + self.leftJoy.x * self.leftJoy.x)
 
         # right stick
         #horiz_move = self.joystick.get_axis(3)
@@ -80,12 +79,8 @@ class joystickManager ():
             self.rightJoy.x = 0
         if abs( self.rightJoy.y ) <= DEAD_ZONE:
             self.rightJoy.y = 0
-        if self.rightJoy.x != 0 or self.rightJoy.y != 0:
-            self.rightJoy.angle = rmath.atan360( self.rightJoy.y / self.rightJoy.x)
-            self.rightJoy.magnitude = math.sqrt( self.rightJoy.y * self.rightJoy.y + self.rightJoy.x * self.rightJoy.x)
-        else:
-            self.rightJoy.angle = 0
-            self.rightJoy.magnitude = 0
+        self.rightJoy.angle = rmath.atan360( self.rightJoy.x, self.rightJoy.y)
+        self.rightJoy.magnitude = math.sqrt( self.rightJoy.y * self.rightJoy.y + self.rightJoy.x * self.rightJoy.x)
 
         # normalize the triggers
         self.leftTrigger =   (self.joystick.get_axis(2) + 1) / 2   # normalized to 0..1
