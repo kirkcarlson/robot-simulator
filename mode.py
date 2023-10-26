@@ -26,7 +26,6 @@ class Mode:  # class for simple modal controls
         self.mode += 1
         if self.mode >= len(self.modes):
             self.mode = 0
-        print(f"advanceCyclic action used to set mode to {self.mode}")
 
 
     def setMode( self, mode):
@@ -71,7 +70,6 @@ class ActionMode:  # class for modal controls of an action function
         if self.mode >= len(self.modes):
             self.mode = 0
         self.action = self.actions[ self.mode]
-        print(f"advanceCyclic action used to set mode to {self.mode}")
     
     
     def setMode( self, mode):

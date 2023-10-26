@@ -22,10 +22,7 @@ class Vector ():
 class JoystickManager ():
     def __init__(self, joystick):
         self.joystick = joystick # raw joystick device
-        #print ("dir (self.joystick) in JoystickManager")
-        #print (dir (self.joystick))
-        #print (f"joystick.get_instance: { self.joystick.get_instance_id()}\n\n")
-        self.buttonManager = buttonManager.ButtonManager( joystick) # button manager to execute actions on button presses
+        self.buttonManager = buttonManager.ButtonManager( joystick) # execute actions on button presses
         self.rightJoy = Vector()
         self.leftJoy = Vector()
         self.hat = Vector()
@@ -34,7 +31,7 @@ class JoystickManager ():
         self.leftTrigger = 0
         self.rightTrigger = 0
 
-    def setCombinedJoyList ( self, listOfJoys):
+    def setCombinedJoyList ( self, listOfJoys): # use non-zero joystick from list
         if not isinstance( listOfJoys, list):
             listOfJoys = list( listOfJoys)
         self.combinedJoyList = listOfJoys
@@ -42,21 +39,12 @@ class JoystickManager ():
     def check(self): # periodic update of joystick variables
         # robot movement with hat
         move = self.joystick.get_hat( 0)
-        #joyX = move[0]
-        #joyY = move[1] # positive is up
-        #joyAngle = rmath.atan360 ( joyY, joyX)
         self.hat.x = move [0]
         self.hat.y = move [1] # positive is forward
         self.hat.angle = rmath.atan360( self.hat.x, self.hat.y)
         self.hat.magnitude = math.sqrt( self.hat.y * self.hat.y + self.hat.x * self.hat.x)
 
         # left stick
-        #horiz_move = self.joystick.get_axis(0)
-        #vert_move =  -self.joystick.get_axis(1) # negative to make positive up
-        #if abs(vert_move) >= minJoy or abs(horiz_move) >= minJoy: #over ride joyX and joyY
-        #    joyX = horiz_move
-        #    joyY = -vert_move # for common code below
-        #    joyAngle = rmath.joyatan360 ( -joyY, joyX)
         self.leftJoy.x = self.joystick.get_axis(0)
         self.leftJoy.y = -self.joystick.get_axis(1) # negate to make forward positive
         if abs( self.leftJoy.x ) <= DEAD_ZONE:
@@ -67,12 +55,6 @@ class JoystickManager ():
         self.leftJoy.magnitude = math.sqrt( self.leftJoy.y * self.leftJoy.y + self.leftJoy.x * self.leftJoy.x)
 
         # right stick
-        #horiz_move = self.joystick.get_axis(3)
-        #vert_move =  -self.joystick.get_axis(4) # negative to make positive up
-        #if abs(vert_move) >= minJoy or abs(horiz_move) >= minJoy: #over ride joyX and joyY
-        #    joyX = horiz_move
-        #    joyY = -vert_move # for common code below
-        #    joyAngle = rmath.joyatan360 ( -joyY, joyX)
         self.rightJoy.x = self.joystick.get_axis(3)
         self.rightJoy.y = -self.joystick.get_axis(4) # negate to make forward positive
         if abs( self.rightJoy.x ) <= DEAD_ZONE:
@@ -83,26 +65,35 @@ class JoystickManager ():
         self.rightJoy.magnitude = math.sqrt( self.rightJoy.y * self.rightJoy.y + self.rightJoy.x * self.rightJoy.x)
 
         # normalize the triggers
-        self.leftTrigger =   (self.joystick.get_axis(2) + 1) / 2   # normalized to 0..1
+        self.leftTrigger =   (self.joystick.get_axis(2) + 1) / 2   # normalized to range 0..1
         if self.leftTrigger < DEAD_ZONE:
             self.leftTrigger = 0
-        self.rightTrigger =  (self.joystick.get_axis(5) + 1) / 2   # normalized to 0..1
+        self.rightTrigger =  (self.joystick.get_axis(5) + 1) / 2   # normalized to range 0..1
         if self.rightTrigger < DEAD_ZONE:
             self.rightTrigger = 0
 
         # Execute joystick actions
         activeJoyButtons = []
         for joyButton in range (self.joystick.get_numbuttons()):
-            #print(f" hi {joyButton} {activeJoyButtons} {joystick.get_button( joyButton)}")
             if self.joystick.get_button( joyButton):
-                #print (f"button {joyButton} is active {activeJoyButtons}")
                 activeJoyButtons.append( joyButton)
-        #print(f" hi {activeJoyButtons} {self.joystick.get_numbuttons()}" )
-        #joyManager.buttonList = activeJoyButtons
-        self.buttonManager.check( activeJoyButtons) # and execute actions
+        self.buttonManager.check( activeJoyButtons)
 
-        self.combined = Vector()
+        # this should be obsolete when editing complete
+        self.combinedJoy = Vector() # reset it to zero
         for joy in self.combinedJoyList:
-            if  joy.x > 0 or joy.y > 0:
+            if  abs( joy.magnitude) > 0:
                 self.combinedJoy = joy
                 break
+
+    # this should be obsolete when editing complete
+    def combineJoys (self, joyList): # take first non-zero joy from list of joys
+        for joy in joyList:
+            # could trap if joy is not instance of Vector
+            try:
+                if  joy.magnitude != 0:
+                    return joy
+            except:
+                print ("Input to joystickManager.combineJoy is not a list of joys")
+        joy = Vector ()
+        return joy

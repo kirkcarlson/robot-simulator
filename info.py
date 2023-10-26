@@ -1,21 +1,21 @@
 import pygame
 
-'''This module displays mation overlayed on the pygame screen'''
+'''This module displays robot information overlayed on the screen'''
 
 ### CONSTANTS
 TEXT_COLOR = 'azure'
 LINE_SIZE = 15
 
 
-class Info():
-    def __init__(self, screen, upper_left, robot, font, line_size=LINE_SIZE, color=TEXT_COLOR):
+class Info(): 
+    def __init__(self, screen, upper_left, font, robot, line_size=LINE_SIZE, color=TEXT_COLOR):
         self.screen = screen
+        self.robot = robot
         self.color = color
         self.font = font
         self.upper_left = upper_left # dictionary with x and y
         self.line_size = line_size
         self.line_number = 0
-        self.robot = robot
         print( "initing info {self.upper_left['x']} {self.upper_left['y']}")
 
 
@@ -30,17 +30,9 @@ class Info():
 
     def update ( self):
         '''Print the information for a robot
-        col is the x position for the text
-        line is the starting line number
         controller is the joystick controller object
         '''
-        #print ("attempting to update information")         #DEBUG
-        #print ("dir robot")         #DEBUG
-        #print (dir( self.robot ) )                         #DEBUG
-        #print ("dir robot.joystickManager")         #DEBUG
-        #print (dir( self.robot.joystickManager ))          #DEBUG
-        #print ("dir robot.joystickManager.joystick")         #DEBUG
-        #print (dir( self.robot.joystickManager.joystick )) #DEBUG
+        # Print Raw Joystick Controller Information
         self.drawln (f"Controller number: {self.robot.joystickManager.joystick.get_instance_id()}", 1)
         self.drawln (f"Battery Level: {self.robot.joystickManager.joystick.get_power_level()}")
         self.drawln (f"Controller Type: {self.robot.joystickManager.joystick.get_name()}")
@@ -64,7 +56,7 @@ class Info():
         for hat in range(numHats):
             self.drawln (f"Hat {hat}: {self.robot.joystickManager.joystick.get_hat( hat)}")
 
-        self.drawln( "")
+        self.drawln( "") # Print normalized Joystick Inion
         self.drawln( f"Right Joy Angle:        {self.robot.joystickManager.rightJoy.angle: 7.2f}")
         self.drawln( f"Right Joy Magnitude:    {self.robot.joystickManager.rightJoy.magnitude: 7.2f}")
         self.drawln( f"Left Joy Angle:         {self.robot.joystickManager.leftJoy.angle: 7.2f}")
@@ -74,9 +66,10 @@ class Info():
         self.drawln( f"Combined Joy Angle:     {self.robot.joystickManager.combinedJoy.angle: 7.2f}")
         self.drawln( f"Combined Joy Magnitude: {self.robot.joystickManager.combinedJoy.magnitude: 7.2f}")
             
-        self.drawln( "")
-        self.drawln( f"Elevator Mode:  {self.robot.elevatorMode.current()}")
+        self.drawln( "") # Display Robot Modes and Information
+        self.drawln( f"Special:        {self.robot.special}")
         self.drawln( f"Rotation Mode:  {self.robot.rotationMode.current()}")
+        self.drawln( f"Elevator Mode:  {self.robot.elevatorMode.current()}")
         self.drawln( f"Rotation Speed: {self.robot.spinSpeedMode.current()}")
         self.drawln( f"Pointing Angle: {self.robot.pointing: 7.2f}")
         self.drawln( f"Heading Angle:  {self.robot.heading: 7.2f}")

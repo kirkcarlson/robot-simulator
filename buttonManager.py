@@ -3,6 +3,15 @@
 #### CONSTANTS ####
 DEBUG = False
 
+A_BUTTON = 0
+B_BUTTON = 1
+X_BUTTON = 2
+Y_BUTTON = 3
+LEFT_BUTTON = 4 # above left trigger
+RIGHT_BUTTON = 5 # above right trigger
+VIEW_BUTTON = 6 # overlapped squares
+MENU_BUTTON = 7 # hamburger strips
+XBOX_BUTTON = 8 # X-Box logo
 LEFT_JOY_BUTTON  =  9
 RIGHT_JOY_BUTTON = 10
 
@@ -20,7 +29,7 @@ class ButtonManager (): # this whole thing is tied to a joystick...
     # a chord is a list of one or more buttons
     def __init__( self, joystick):
         self.joystick = joystick
-        self.monitoredButtons = []           # list of buttons being monitored
+        self.monitoredButtons = []  # list of buttons being monitored
         self.chordActions = []      # list of chordAction dictionaries
                                     # [ {'chord': chord,    ... sorted list of keys
                                     #     'state': state,    ...can be: IDLE, PRESSED, OVERRIDDEN
@@ -288,4 +297,4 @@ progress('should see "button 4 5 released"')
 keyManager.check( [])
 
 
-'''
+#'''

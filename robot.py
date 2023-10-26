@@ -26,12 +26,13 @@ preset 3: low stand        low         floor
 preset 4: medium stand     med         med
 preset 5: high stand       high        high
 '''
-elevatorModes = [ "idle", "floor pickup", "low", "medium", "high"]
-elevatorIdleMode        = 0
-elevatorFloorPickupMode = 1
-elevatorLowMode         = 2
-elevatorMediumMode      = 3
-elevatorHighMode        = 4
+elevatorModes = [ "stowed", "floor pickup", "low", "medium", "high"]
+elevatorStowed            = 0
+elevatorFloorPickupMode   = 1
+elevatorStationPickupMode = 2
+elevatorLowMode           = 3
+elevatorMediumMode        = 4
+elevatorHighMode          = 5
 
 #rotationMode values
 rotationModes = [ "manual", "tank", "tank field mode", "to front", "to north", "to south", "to east", "to west", "spin CW", "spin CCW"]
@@ -67,51 +68,53 @@ class Robot(pygame.sprite.Sprite):
         self.rect  = self.image.get_rect()
         self.joystick = joystick # joystick object used to control robot motions.
         self.joystickManager = joystickManager.JoystickManager( joystick) # assocates joystick with joystick manager
-        self.assignedJoyforDrive = self.joystickManager.combinedJoy # joystick to be used for drive e.g. self.joystickManager.leftJoy
-        self.joy = None # joy object assigned for drive by joystick
-        self.driveByJoy= lambda : self.driveByJoystickNoRotation() # pointer to a particular function
-        #self.info = info.Info() # information area assiciated with this robot
+        self.driveByJoy= None # pointer to a particular function and joysticks
+        self.info  = None     # information area assiciated with this robot
+        self.driveByAxis = None # list of methods to monitor axis values
         self.position = pygame.math.Vector2(*position)
         self.pointing = 0  # direction that the robot is pointing
         self.heading = 0  # directon in which the robot is moving
         self.spinSpeedMode = mode.Mode ( spinSpeedModes)
         self.elevatorMode = mode.Mode ( elevatorModes)
-        self.rotationMode = mode.ActionMode ( rotationModes, [ 
-            lambda : self.driveByJoystickNoRotation(),
-            lambda : self.driveByJoystickTankMode(),
-            lambda : self.driveByJoystickTankFieldMode(),
-            lambda : self.driveByJoystickRotateToFront(),
-            lambda : self.driveByJoystickRotateToNorth(),
-            lambda : self.driveByJoystickRotateToSouth(),
-            lambda : self.driveByJoystickRotateToEast(),
-            lambda : self.driveByJoystickRotateToWest(),
-            lambda : self.driveByJoystickRotateCW(),
-            lambda : self.driveByJoystickRotateCCW(),
+        self.rotationMode = mode.ActionMode ( rotationModes, [  # define actions for each mode
+            lambda joy : self.driveByJoystickNoRotation( joy),
+            lambda joy : self.driveByJoystickTankMode( joy),
+            lambda joy : self.driveByJoystickTankFieldMode( joy),
+            lambda joy : self.driveByJoystickRotateToFront( joy),
+            lambda joy : self.driveByJoystickRotateToNorth( joy),
+            lambda joy : self.driveByJoystickRotateToSouth( joy),
+            lambda joy : self.driveByJoystickRotateToEast( joy),
+            lambda joy : self.driveByJoystickRotateToWest( joy),
+            lambda joy : self.driveByJoystickRotateCW( joy),
+            lambda joy : self.driveByJoystickRotateCCW( joy),
         ])
+        self.driveByActions = []
+        self.special = ""
 
 
     def update(self):
-        # need to do the real time drive by joystick command...
-        # easiest way for now is to use the match case thing
-        # would like to use a lambda function set by the mode selection
-        '''
-        same problem comes to play for the joystick paddles
-        the joystick is scanned on each frame
-        if an action/command is attached to a joystick it is executed from the joystickManager
-        the same thing should happen for the joystick devices on the joystick controller
-        in this case, the command/action would update the robot.position, etc. and this routing would paint
-        the robot in its new postion, orientation, etc.
-        '''
-        # move the robot as prescribed with joystick
-        #self.joy = self.assignedJoy
-        self.joystickManager.check() # update the joystick data for the robot
-        self.joy = self.joystickManager.combinedJoy
-        self.driveByRobot = self.rotationMode.action 
-        if self.joy.magnitude > 0: # this seems redundant
-            self.driveByRobot ()
+        ''' This method relies on actions set to particular lamda functions.
+        This makes the method independent on what is being done.
+        Its primary purpose is to pass joystick commands to particular actions.
 
+        thinking through this a bit more...
+        each driveByJoystick function can be controlled by one or more joysticks or individual axis
+        each axis can be normalized to be 0..1 instead of -1..1
+        this would be a list of tuples like:
+        [(action, joy),...] or [(action, axis)...]
+        or it could be a list of lambda functions like:
+        [lamda input : action( input),...]
+        the "input" could be a raw .joy attribute or it could be a .combined([listOfJoys])
+        let's try this first...
+        '''
+        # update keys and axis before joysticks to give them a little priority
+        self.joystickManager.check() # update the since actions have same code
+        for action in self.driveByAxis:
+            action()
 
-        # Create the rotated copy.
+        self.driveByJoystick () # this should just be self.rotationMode.action  or one of the driveByActions
+
+        # Create the rotated copy of the robot.
         # py image has y down and 0 to the right, hence 90-angle
         self.image = pygame.transform.rotate(self.original_image, rmath.constrain360( 90-self.pointing)).convert()  # Angle is absolute value!
 
@@ -140,7 +143,7 @@ class Robot(pygame.sprite.Sprite):
 
     def _turnToward( self, angle):
         diff = rmath.constrain360( self.pointing - angle)
-        if abs( diff ) > 3:
+        if abs( diff ) > self.spinSpeedMode.current():
             if diff > 0 and diff <180:
                 self.pointing = rmath.constrain360( self.pointing - self.spinSpeedMode.current())
             else:
@@ -149,112 +152,99 @@ class Robot(pygame.sprite.Sprite):
             self.pointing = angle
             
 
-    def turnCW( self):
-        self._turnToward( self.pointing + self.spinSpeedMode.current())
-            
-
-    def turnCCW( self):
-        self._turnToward( self.pointing - self.spinSpeedMode.current())
-
-    '''
-    MAX_ROBOT_SPEED is supposed the maximum speed of the robot. The current use here is incorrect
-    as it would need to be broken down into its x and y components base on robot heading.
-            x += joyX * MAX_ROBOT_SPEED
-            y -= joyY * MAX_ROBOT_SPEED
-
-            should be:
-            x += self.joy.magnitude * math.sin(self.joy.angle) * MAX_ROBOT_SPEED
-            y += self.joy.magnitude * math.cos(self.joy.angle) * MAX_ROBOT_SPEED
-
-    joyX and joyY are  consoldiated angles ... need to known assigned joystick for the drive by functions
-    '''
-
-    def driveByJoystickNoRotation( self):
-        if self.joy.magnitude > 0:
-            self.position.x += self.joy.magnitude * MAX_ROBOT_SPEED * math.sin( math.radians( self.joy.angle))
-            self.position.y -= self.joy.magnitude * MAX_ROBOT_SPEED * math.cos( math.radians( self.joy.angle))
+    def driveByJoystickNoRotation( self, joy):
+        # joy.magnitude and joy.angle is used as a unit vector, rather than joy.x and joy.y which distort the vector'''
+        #if self.joy.magnitude > 0:
+        #    self.position.x += self.joy.magnitude * MAX_ROBOT_SPEED * math.sin( math.radians( self.joy.angle))
+        #    self.position.y -= self.joy.magnitude * MAX_ROBOT_SPEED * math.cos( math.radians( self.joy.angle))
+        if joy.magnitude > 0:
+            print (f"driving by joystick ang:{joy.angle:.2f} mag:{joy.magnitude:.2f}")
+            self.position.x += joy.magnitude * MAX_ROBOT_SPEED * math.sin( math.radians( joy.angle))
+            self.position.y -= joy.magnitude * MAX_ROBOT_SPEED * math.cos( math.radians( joy.angle))
 
 
-    def driveByJoystickRotateToFront( self):
-        if self.joy.magnitude > 0:
-            self.heading = self.joy.angle
+    def driveByJoystickRotateToFront( self, joy):
+        if joy.magnitude > 0:
+            self.heading = joy.angle
             self._turnToward( self.heading)
-            self.driveByJoystickNoRotation()
+            self.driveByJoystickNoRotation( joy)
 
 
-    def driveByJoystickRotateCW( self):
-        if self.joy.magnitude > 0:
-            self.heading = self.joy.angle
+    def driveByJoystickRotateCW( self, joy):
+        if joy.magnitude > 0:
+            self.heading = joy.angle
             self._turnToward( self.pointing + self.spinSpeedMode.current())  # rotate clockwise
-            self.driveByJoystickNoRotation()
+            self.driveByJoystickNoRotation( joy)
 
 
-    def driveByJoystickRotateCCW( self):
-        if self.joy.magnitude > 0:
-            self.heading = self.joy.angle
+    def driveByJoystickRotateCCW( self, joy):
+        if joy.magnitude > 0:
+            self.heading = joy.angle
             self._turnToward( self.pointing - self.spinSpeedMode.current())  # rotate counter clockwise
-            self.driveByJoystickNoRotation()
+            self.driveByJoystickNoRotation( joy)
 
 
-    def driveByJoystickTankMode( self):
-        if self.joy.magnitude > 0:
-            print (f"tank mode joy x:{self.joy.x:.2f} y:{self.joy.y:.2f} mag:{self.joy.magnitude:.2f} ang:{self.joy.angle:.1f}")
-            # tank mode, y ==> forward/backward speed, x ==> turn left/right
-            
-                # robot turning has a priority and if within +/-90 follows the robot vector, otherwise it is in reverse
-                # velocity is controlled by the y coordinate of the joystick +forward, -backward
-                # turn rate is controlled by the x coordinate of the joystick -left, +right
-                #robotPointing = rmath.constrain360( robotPointing + (robot.spinSpeeds[ robot.spinSpeedMode.mode] * joyX))
-            self._turnToward( self.pointing + self.spinSpeedMode.current()  * self.joy.x)
+    def driveByJoystickTankMode( self, joy):
+        # tank mode, joystick y ==> forward/backward speed, joystick x ==> turn left/right
+        if joy.magnitude > 0:
+            self._turnToward( self.pointing + self.spinSpeedMode.current()  * joy.x)
             self.heading = self.pointing
-            self.position.x += (math.sin( math.radians(self.heading)) * self.joy.y * 5)
-            self.position.y -= (math.cos( math.radians(self.heading)) * self.joy.y * 5) # y is down on the screen
+            self.position.x += (math.sin( math.radians(self.heading)) * joy.y * MAX_ROBOT_SPEED)
+            self.position.y -= (math.cos( math.radians(self.heading)) * joy.y * MAX_ROBOT_SPEED) # y is down on the screen
 
 
-    def driveByJoystickTankFieldMode( self):
-        if self.joy.magnitude > 0:
+    def driveByJoystickTankFieldMode( self, joy):
+        if joy.magnitude > 0:
+            self._turnToward( joy.angle)
+            self.heading = self.pointing
+            self.position.x += math.sin( math.radians(self.heading)) * joy.magnitude * MAX_ROBOT_SPEED
+            self.position.y -= math.cos( math.radians(self.heading)) * joy.magnitude * MAX_ROBOT_SPEED # y is down on screen
+
+            ''' may be start code for an auto reverse, doesn't work as it is
             diff = rmath.constrain180( self.pointing - self.joy.angle)
             if abs(diff) > 120:
                 self._turnToward( self.joy.angle)
                 self.position.x += math.sin( math.radians(self.heading)) * self.joy.magnitude * MAX_ROBOT_SPEED
                 self.position.y -= math.cos( math.radians(self.heading)) * self.joy.magnitude * MAX_ROBOT_SPEED # y is down on screen
-            else: #auto reverse
+            else: #auto reverse .... doesn't quite work right. oscillates
                 self._turnToward( self.joy.angle + 180 )
                 self.position.x -= (math.sin( math.radians(self.heading) ) * self.joy.magnitude * MAX_ROBOT_SPEED)
                 self.position.y += (math.cos( math.radians(self.heading) ) * self.joy.magnitude * MAX_ROBOT_SPEED)
+            '''
 
    
-    def driveByJoystickRotateToNorth( self):
-        if self.joy.magnitude > 0:
-            self.heading = self.joy.angle
+    def driveByJoystickRotateToNorth( self, joy):
+        if joy.magnitude > 0:
+            self.heading = joy.angle
             self._turnToward( 0)
-            self.driveByJoystickNoRotation()
+            self.driveByJoystickNoRotation( joy)
 
 
-    def driveByJoystickRotateToEast( self):
-        if self.joy.magnitude > 0:
-            self.heading = self.joy.angle
+    def driveByJoystickRotateToEast( self, joy):
+        if joy.magnitude > 0:
+            self.heading = joy.angle
             self._turnToward( 90)
-            self.driveByJoystickNoRotation()
+            self.driveByJoystickNoRotation( joy)
 
 
-    def driveByJoystickRotateToSouth( self):
-        if self.joy.magnitude > 0:
-            self.heading = self.joy.angle
+    def driveByJoystickRotateToSouth( self, joy):
+        if joy.magnitude > 0:
+            self.heading = joy.angle
             self._turnToward( 180)
-            self.driveByJoystickNoRotation()
+            self.driveByJoystickNoRotation( joy)
         
 
-    def driveByJoystickRotateToWest( self):
-        if self.joy.magnitude > 0:
-            self.heading = self.joy.angle
+    def driveByJoystickRotateToWest( self, joy):
+        if joy.magnitude > 0:
+            self.heading = joy.angle
             self._turnToward( 270)
-            self.driveByJoystickNoRotation()
+            self.driveByJoystickNoRotation( joy)
 
 
     def turnCW( self):
         self._turnToward( self.pointing + self.spinSpeedMode.current())
-        if self.rotationMode.mode == tankMode:
+        if self.rotationMode.mode == tankMode or self.rotationMode.mode == tankFieldMode:
+            print (f"turnCW tank {self.pointing:.2f}")
             self.heading = self.pointing
         else:
             self.rotationMode.setMode(manualRotationMode ) # turn off auto rotation
@@ -262,7 +252,35 @@ class Robot(pygame.sprite.Sprite):
         
     def turnCCW( self):
         self._turnToward( self.pointing - self.spinSpeedMode.current())
-        if self.rotationMode.mode == tankMode:
+        if self.rotationMode.mode == tankMode or self.rotationMode.mode == tankFieldMode:
             self.heading = self.pointing
+            print (f"turnCCW tank {self.pointing:.2f}")
         else:
             self.rotationMode.setMode(manualRotationMode ) # turn off auto rotation
+
+    def turnCWBy( self, value):
+        # value is in range 0..1
+        if value > joystickManager.DEAD_ZONE:
+            self._turnToward( self.pointing + self.spinSpeedMode.current() * value)
+            if self.rotationMode.mode == tankMode or self.rotationMode.mode == tankFieldMode:
+                print (f"turnCWBy tank {self.pointing:.2f}")
+                self.heading = self.pointing
+            else:
+                self.rotationMode.setMode(manualRotationMode ) # turn off auto rotation
+
+        
+    def turnCCWBy( self, value):
+        # value is in range 0..1
+        if value > joystickManager.DEAD_ZONE:
+            self._turnToward( self.pointing - self.spinSpeedMode.current() * value)
+            if self.rotationMode.mode == tankMode or self.rotationMode.mode == tankFieldMode:
+                print (f"turnCCWBy tank {self.pointing:.2f}")
+                self.heading = self.pointing
+            else:
+                self.rotationMode.setMode(manualRotationMode ) # turn off auto rotation
+
+
+    def setSpecial (self,message):
+        if not isinstance( message, str):
+            str( message)
+        self.special = message

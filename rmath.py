@@ -12,9 +12,9 @@ dprint ("starting up")
 def constrain360( angle): # constrain angle to range (0,360)
     return angle % 360
 
+
 def constrain180( angle): # constrain angle to range (-180,180)
     return constrain360( angle + 180) - 180
-
 
 
 def atan360( x, y):  # find the angle 0..360 from joystick x and -y values
@@ -33,10 +33,10 @@ def atan360( x, y):  # find the angle 0..360 from joystick x and -y values
         angle = 180 + angle
     elif y>=0 and x<0:
         angle = 360 + angle
-    #angle = constrain360( angle)
-    #dprint ( f"{x: 7.2f} {y: 7.2f} {angle: 7.2f}")
     return angle
 
+##### DEBUG FUNCTIONS
+#DEBUG = True # remove comment to activate
 
 #           expected (0 top cw)                                atan360 (x/y)
 sqrt3 = math.sqrt(3)
