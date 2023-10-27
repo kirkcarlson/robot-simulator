@@ -154,11 +154,7 @@ class Robot(pygame.sprite.Sprite):
 
     def driveByJoystickNoRotation( self, joy):
         # joy.magnitude and joy.angle is used as a unit vector, rather than joy.x and joy.y which distort the vector'''
-        #if self.joy.magnitude > 0:
-        #    self.position.x += self.joy.magnitude * MAX_ROBOT_SPEED * math.sin( math.radians( self.joy.angle))
-        #    self.position.y -= self.joy.magnitude * MAX_ROBOT_SPEED * math.cos( math.radians( self.joy.angle))
         if joy.magnitude > 0:
-            print (f"driving by joystick ang:{joy.angle:.2f} mag:{joy.magnitude:.2f}")
             self.position.x += joy.magnitude * MAX_ROBOT_SPEED * math.sin( math.radians( joy.angle))
             self.position.y -= joy.magnitude * MAX_ROBOT_SPEED * math.cos( math.radians( joy.angle))
 
@@ -244,7 +240,6 @@ class Robot(pygame.sprite.Sprite):
     def turnCW( self):
         self._turnToward( self.pointing + self.spinSpeedMode.current())
         if self.rotationMode.mode == tankMode or self.rotationMode.mode == tankFieldMode:
-            print (f"turnCW tank {self.pointing:.2f}")
             self.heading = self.pointing
         else:
             self.rotationMode.setMode(manualRotationMode ) # turn off auto rotation
@@ -254,7 +249,6 @@ class Robot(pygame.sprite.Sprite):
         self._turnToward( self.pointing - self.spinSpeedMode.current())
         if self.rotationMode.mode == tankMode or self.rotationMode.mode == tankFieldMode:
             self.heading = self.pointing
-            print (f"turnCCW tank {self.pointing:.2f}")
         else:
             self.rotationMode.setMode(manualRotationMode ) # turn off auto rotation
 
@@ -263,7 +257,6 @@ class Robot(pygame.sprite.Sprite):
         if value > joystickManager.DEAD_ZONE:
             self._turnToward( self.pointing + self.spinSpeedMode.current() * value)
             if self.rotationMode.mode == tankMode or self.rotationMode.mode == tankFieldMode:
-                print (f"turnCWBy tank {self.pointing:.2f}")
                 self.heading = self.pointing
             else:
                 self.rotationMode.setMode(manualRotationMode ) # turn off auto rotation
@@ -274,7 +267,6 @@ class Robot(pygame.sprite.Sprite):
         if value > joystickManager.DEAD_ZONE:
             self._turnToward( self.pointing - self.spinSpeedMode.current() * value)
             if self.rotationMode.mode == tankMode or self.rotationMode.mode == tankFieldMode:
-                print (f"turnCCWBy tank {self.pointing:.2f}")
                 self.heading = self.pointing
             else:
                 self.rotationMode.setMode(manualRotationMode ) # turn off auto rotation

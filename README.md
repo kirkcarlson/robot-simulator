@@ -13,12 +13,16 @@ Requirements:
         - hat controls motion of robot
         - left paddle or A button controls CCW rotation
         - right paddle or B button controls CCW rotation
-        - X button selects rotation mode
-            - chord of A and B buttons selects rotate to south mode
-            - chord of X and Y buttons selects rotate to north mode
-            - chord of A and X buttons selects rotate to west mode
-            - chord of B and Y buttons selects rotate to east mode
-            - using manual rotation commands overriding of specified rotation mode (except for tank modes)
+        - rotation modes
+          - X button selects rotation mode
+          - chord of A and B buttons selects rotate to south mode
+          - chord of X and Y buttons selects rotate to north mode
+          - chord of A and X buttons selects rotate to west mode
+          - chord of B and Y buttons selects rotate to east mode
+          - chord of A, B, X, and Y buttons selects rotate to front mode
+          - chord of A, X, and LEFT buttons selects CW spin
+          - chord of B, Y, and LEFT buttons selects CCW spin
+          - using manual rotation commands overriding of specified rotation mode (except for tank modes)
         - view button controls 'back'
         - menu button controls 'start'
         - left button selects elevator and arm presets (yes, this is a co-pilot function, but trying to see how the control might work. The hat seems like it might be a better control for this forward=up, back=down, right=out, left=in.)

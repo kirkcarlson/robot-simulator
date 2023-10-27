@@ -100,14 +100,26 @@ while run:
                     [buttonManager.A_BUTTON, buttonManager.B_BUTTON],
                     lambda : robot1.rotationMode.setMode( robot.autoRotateSouthMode ))
                 robot1.joystickManager.buttonManager.onPress(
-                    [buttonManager.X_BUTTON,buttonManager.Y_BUTTON],
+                    [buttonManager.X_BUTTON, buttonManager.Y_BUTTON],
                     lambda : robot1.rotationMode.setMode( robot.autoRotateNorthMode ))
                 robot1.joystickManager.buttonManager.onPress(
-                    [buttonManager.A_BUTTON,buttonManager.X_BUTTON],
+                    [buttonManager.A_BUTTON, buttonManager.X_BUTTON],
                     lambda : robot1.rotationMode.setMode( robot.autoRotateWestMode ))
                 robot1.joystickManager.buttonManager.onPress(
-                    [buttonManager.B_BUTTON,buttonManager.Y_BUTTON],
+                    [buttonManager.B_BUTTON, buttonManager.Y_BUTTON],
                     lambda : robot1.rotationMode.setMode( robot.autoRotateEastMode ))
+                robot1.joystickManager.buttonManager.onPress(
+                    [buttonManager.A_BUTTON, buttonManager.B_BUTTON,
+                    buttonManager.X_BUTTON, buttonManager.Y_BUTTON],
+                    lambda : robot1.rotationMode.setMode( robot.autoRotateFrontMode ))
+                robot1.joystickManager.buttonManager.onPress(
+                    [buttonManager.A_BUTTON, buttonManager.X_BUTTON,
+                    buttonManager.LEFT_BUTTON],
+                    lambda : robot1.rotationMode.setMode( robot.spinCWMode ))
+                robot1.joystickManager.buttonManager.onPress(
+                    [buttonManager.B_BUTTON, buttonManager.Y_BUTTON,
+                    buttonManager.LEFT_BUTTON],
+                    lambda : robot1.rotationMode.setMode( robot.spinCCWMode ))
                 robot1.joystickManager.buttonManager.onWhile(
                     [buttonManager.A_BUTTON],
                     lambda : robot1.turnCCW())
@@ -161,18 +173,6 @@ while run:
                 robot2.info = info.Info( screen, (400, 10), font, robot2 )
 
                 # set up the mapping of chords and actions
-                robot2.joystickManager.buttonManager.onPress(
-                    [buttonManager.A_BUTTON, buttonManager.B_BUTTON],
-                    lambda : robot2.rotationMode.setMode( robot.autoRotateSouthMode ))
-                robot2.joystickManager.buttonManager.onPress(
-                    [buttonManager.X_BUTTON,buttonManager.Y_BUTTON],
-                    lambda : robot2.rotationMode.setMode( robot.autoRotateNorthMode ))
-                robot2.joystickManager.buttonManager.onPress(
-                    [buttonManager.A_BUTTON,buttonManager.X_BUTTON],
-                    lambda : robot2.rotationMode.setMode( robot.autoRotateWestMode ))
-                robot2.joystickManager.buttonManager.onPress(
-                    [buttonManager.B_BUTTON,buttonManager.Y_BUTTON],
-                    lambda : robot2.rotationMode.setMode( robot.autoRotateEastMode ))
                 robot2.joystickManager.buttonManager.onWhile(
                     [buttonManager.A_BUTTON],
                     lambda : robot2.turnCCW())
@@ -180,17 +180,8 @@ while run:
                     [buttonManager.B_BUTTON],
                     lambda : robot2.turnCW())
                 robot2.joystickManager.buttonManager.onPress(
-                    [buttonManager.LEFT_BUTTON],
-                    lambda : robot2.elevatorMode.advanceCyclic())
-                robot2.joystickManager.buttonManager.onPress(
                     [buttonManager.XBOX_BUTTON],
                     lambda : robot2.rotationMode.advanceCyclic())
-                robot2.joystickManager.buttonManager.onPress(
-                    [buttonManager.X_BUTTON],
-                    lambda : robot2.rotationMode.advanceCyclic())
-                robot2.joystickManager.buttonManager.onPress(
-                    [buttonManager.RIGHT_BUTTON],
-                    lambda : robot2.spinSpeedMode.advanceCyclic())
                 robot2.joystickManager.buttonManager.onPress(
                     [buttonManager.VIEW_BUTTON],
                     lambda : robot2.setSpecial( 'Start'))
@@ -215,9 +206,7 @@ while run:
                 robot2.spinSpeedMode.setMode( robot.spinSpeedHigh)
                 robot2.driveByJoystick =  lambda : robot2.rotationMode.action(
                     robot2.joystickManager.combineJoys( [
-                        robot2.joystickManager.rightJoy,
-                        robot2.joystickManager.leftJoy,
-                        robot2.joystickManager.hat]))
+                        robot2.joystickManager.leftJoy ],))
 
             
         #quit program

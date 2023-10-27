@@ -16,7 +16,6 @@ class Info():
         self.upper_left = upper_left # dictionary with x and y
         self.line_size = line_size
         self.line_number = 0
-        print( "initing info {self.upper_left['x']} {self.upper_left['y']}")
 
 
 #function for outputting text onto the screen
