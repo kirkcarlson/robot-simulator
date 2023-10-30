@@ -95,7 +95,7 @@ while run:
                 # Info ( screen, upper_left, font, robot, line_size=LINE_SIZE, color=TEXT_COLOR):
                 robot1.info = info.Info( screen, (10, 10), font, robot1 )
                                     
-                # set up the mapping of chords and actions
+                # set up the mapping of chords and commands
                 robot1.joystickManager.buttonManager.onPress(
                     [buttonManager.A_BUTTON, buttonManager.B_BUTTON],
                     lambda : robot1.rotationMode.setMode( robot.autoRotateSouthMode ))
@@ -151,7 +151,7 @@ while run:
                     [buttonManager.MENU_BUTTON],
                     lambda : robot1.setSpecial( ''))
                 
-                # map the joystick and trigger actions
+                # map the joystick and trigger commands
                 robot1.driveByAxis = [
                     lambda : robot1.turnCWBy( robot1.joystickManager.rightTrigger),
                     lambda : robot1.turnCCWBy( robot1.joystickManager.leftTrigger)
@@ -160,7 +160,7 @@ while run:
                 # set startup modes
                 robot1.rotationMode.setMode( robot.manualRotationMode )
                 robot1.spinSpeedMode.setMode( robot.spinSpeedHigh)
-                robot1.driveByJoystick =  lambda : robot1.rotationMode.action(
+                robot1.driveByJoystick =  lambda : robot1.rotationMode.command(
                     robot1.joystickManager.combineJoys( [
                         robot1.joystickManager.rightJoy,
                         robot1.joystickManager.leftJoy,
@@ -172,7 +172,7 @@ while run:
                 # Info ( screen, upper_left, font, robot, line_size=LINE_SIZE, color=TEXT_COLOR):
                 robot2.info = info.Info( screen, (400, 10), font, robot2 )
 
-                # set up the mapping of chords and actions
+                # set up the mapping of chords and commands
                 robot2.joystickManager.buttonManager.onWhile(
                     [buttonManager.A_BUTTON],
                     lambda : robot2.turnCCW())
@@ -195,7 +195,7 @@ while run:
                     [buttonManager.MENU_BUTTON],
                     lambda : robot2.setSpecial( ''))
                 
-                # map the joystick and trigger actions
+                # map the joystick and trigger commands
                 robot2.driveByAxis = [
                     lambda : robot2.turnCWBy( robot2.joystickManager.rightTrigger),
                     lambda : robot2.turnCCWBy( robot2.joystickManager.leftTrigger)
@@ -204,7 +204,7 @@ while run:
                 # set startup modes
                 robot2.rotationMode.setMode( robot.manualRotationMode )
                 robot2.spinSpeedMode.setMode( robot.spinSpeedHigh)
-                robot2.driveByJoystick =  lambda : robot2.rotationMode.action(
+                robot2.driveByJoystick =  lambda : robot2.rotationMode.command(
                     robot2.joystickManager.combineJoys( [
                         robot2.joystickManager.leftJoy ],))
 

@@ -76,7 +76,7 @@ class Robot(pygame.sprite.Sprite):
         self.heading = 0  # directon in which the robot is moving
         self.spinSpeedMode = mode.Mode ( spinSpeedModes)
         self.elevatorMode = mode.Mode ( elevatorModes)
-        self.rotationMode = mode.ActionMode ( rotationModes, [  # define actions for each mode
+        self.rotationMode = mode.CommandMode ( rotationModes, [  # define commands for each mode
             lambda joy : self.driveByJoystickNoRotation( joy),
             lambda joy : self.driveByJoystickTankMode( joy),
             lambda joy : self.driveByJoystickTankFieldMode( joy),
@@ -88,31 +88,31 @@ class Robot(pygame.sprite.Sprite):
             lambda joy : self.driveByJoystickRotateCW( joy),
             lambda joy : self.driveByJoystickRotateCCW( joy),
         ])
-        self.driveByActions = []
+        self.driveByCommands = []
         self.special = ""
 
 
     def update(self):
-        ''' This method relies on actions set to particular lamda functions.
+        ''' This method relies on commands set to particular lamda functions.
         This makes the method independent on what is being done.
-        Its primary purpose is to pass joystick commands to particular actions.
+        Its primary purpose is to pass joystick commands to particular commands.
 
         thinking through this a bit more...
         each driveByJoystick function can be controlled by one or more joysticks or individual axis
         each axis can be normalized to be 0..1 instead of -1..1
         this would be a list of tuples like:
-        [(action, joy),...] or [(action, axis)...]
+        [(command, joy),...] or [(command, axis)...]
         or it could be a list of lambda functions like:
-        [lamda input : action( input),...]
+        [lamda input : command( input),...]
         the "input" could be a raw .joy attribute or it could be a .combined([listOfJoys])
         let's try this first...
         '''
         # update keys and axis before joysticks to give them a little priority
-        self.joystickManager.check() # update the since actions have same code
-        for action in self.driveByAxis:
-            action()
+        self.joystickManager.check() # update the since commands have same code
+        for command in self.driveByAxis:
+            command()
 
-        self.driveByJoystick () # this should just be self.rotationMode.action  or one of the driveByActions
+        self.driveByJoystick () # this should just be self.rotationMode.command  or one of the driveByCommands
 
         # Create the rotated copy of the robot.
         # py image has y down and 0 to the right, hence 90-angle

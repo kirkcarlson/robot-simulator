@@ -40,13 +40,13 @@ class Mode:  # class for simple modal controls
         return self.modes [self.mode]
 
 
-class ActionMode:  # class for modal controls of an action function
-    def __init__( self, modes, actions): #modes has to be a dictionary of key, value pairs, keys are numeric, values are strings
+class CommandMode:  # class for modal controls of a command function
+    def __init__( self, modes, commands): #modes has to be a dictionary of key, value pairs, keys are numeric, values are strings
         self.modes = modes
-        self.actions = actions
+        self.commands = commands
         self.mode = 0
         self.lastTrigger = 0
-        self.action = lambda  : 0 # an action function associated with the modal control
+        self.command = lambda  : 0 # a command function associated with the modal control
 
 
     def isEdge( self, trigger):
@@ -62,19 +62,19 @@ class ActionMode:  # class for modal controls of an action function
     def advance( self):
         if self.mode + 1 < len(self.modes):
             self.mode += 1
-        self.action = self.actions[ self.mode]
+        self.command = self.commands[ self.mode]
 
 
     def advanceCyclic( self):
         self.mode += 1
         if self.mode >= len(self.modes):
             self.mode = 0
-        self.action = self.actions[ self.mode]
+        self.command = self.commands[ self.mode]
     
     
     def setMode( self, mode):
         self.mode = mode
-        self.action = self.actions[ mode]
+        self.command = self.commands[ mode]
 
 
     def reset( self):

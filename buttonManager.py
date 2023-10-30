@@ -15,7 +15,7 @@ XBOX_BUTTON = 8 # X-Box logo
 LEFT_JOY_BUTTON  =  9
 RIGHT_JOY_BUTTON = 10
 
-#possible states within chordActions.state
+#possible states within chordCommands.state
 IDLE       = 0
 PRESSED    = 1
 OVERRIDDEN = 2
@@ -30,15 +30,15 @@ class ButtonManager (): # this whole thing is tied to a joystick...
     def __init__( self, joystick):
         self.joystick = joystick
         self.monitoredButtons = []  # list of buttons being monitored
-        self.chordActions = []      # list of chordAction dictionaries
+        self.chordCommands = []      # list of chordCommand dictionaries
                                     # [ {'chord': chord,    ... sorted list of keys
                                     #     'state': state,    ...can be: IDLE, PRESSED, OVERRIDDEN
-                                    #     'press:': action,   ...action is reference to a function or method
-                                    #     'release': action,
-                                    #     'while':action}]()
+                                    #     'press:': command,   ...command is reference to a function or method
+                                    #     'release': command,
+                                    #     'while': command}]()
                                     # list is in order of precedence (longer before shorter)
 
-    def _addActionToChordActions (self, chord, action, actionType): # add button-action to chordActions
+    def _addCommandToChordCommands (self, chord, command, commandType): # add button-command to chordCommands
         # chord is a list of one or more buttons
         if isinstance(chord, set) or isinstance(chord,tuple):
             chord = list(chord)
@@ -50,63 +50,63 @@ class ButtonManager (): # this whole thing is tied to a joystick...
                 self.monitoredButtons.append( button)
                 self.monitoredButtons.sort()
 
-        # add chord{} to chordActions or action to chordActions[chord]
+        # add chord{} to chordCommand or command to chordCommands[chord]
         found = False
-        for i in range (len(self.chordActions)):
-            dprint(f"--checking {type(chord)}:{chord} against {type(self.chordActions[i]['chord'])}{self.chordActions[i]['chord']}")
-            if self.chordActions[i]['chord'] == chord:
-                dprint("----modifying chordActions")
+        for i in range (len(self.chordCommands)):
+            dprint(f"--checking {type(chord)}:{chord} against {type(self.chordCommands[i]['chord'])}{self.chordCommands[i]['chord']}")
+            if self.chordCommands[i]['chord'] == chord:
+                dprint("----modifying chordCommands")
                 found = True
-                self.chordActions[i][actionType]= action
+                self.chordCommands[i][commandType]= command
                 break
         if not found:        
-            dprint(f"adding chord{chord} to self.chordActions")
-            self.chordActions.append ({'chord': chord, 'state': self._getChordActivity( chord), actionType: action})
-            # sort the chordActions by precedence: longer chords higher than shorter chords
-            self.chordActions = (sorted( self.chordActions, key=lambda chordAction: len(chordAction['chord']), reverse=True))
+            dprint(f"adding chord{chord} to self.chordCommands")
+            self.chordCommands.append ({'chord': chord, 'state': self._getChordActivity( chord), commandType: command})
+            # sort the chordCommands by precedence: longer chords higher than shorter chords
+            self.chordCommands = (sorted( self.chordCommands, key=lambda chordCommand: len(chordCommand['chord']), reverse=True))
 
         
-    def onPress (self, chord, action): # add press button-action to chordActions
-        self._addActionToChordActions( chord, action, 'press')
+    def onPress (self, chord, command): # add press button-command to chordCommands
+        self._addCommandToChordCommands( chord, command, 'press')
 
     
-    def onRelease (self, chord, action): # add release button-action to chordActions
-        self._addActionToChordActions( chord, action, 'release')
+    def onRelease (self, chord, command): # add release button-command to chordCommands
+        self._addCommandToChordCommands( chord, command, 'release')
 
     
-    def onWhile (self, chord, action): # add while button-action to chordActions
-        self._addActionToChordActions( chord, action, 'while')
+    def onWhile (self, chord, command): # add while button-command to chordCommands
+        self._addCommandToChordCommands( chord, command, 'while')
 
 
-    def _removeActionFromChordActions (self, chord, actionType): # remove button-action from chordActions
+    def _removeCommandFromChordCommands (self, chord, commandType): # remove button-command from chordCommands
         chord.sort() # to make sure buttons in same order for compare to work
-        for i in range (len(self.chordActions)):
-            if self.chordActions[i]['chord'] == chord:
-                if self.chordActions[i][actionType] is not None:
-                    self.chordActions[i].pop(actionType)
-                if len(self.chordActions[i]) == 2: # just the chord and state left
-                    self.chordActions.pop(i)
+        for i in range (len(self.chordCommands)):
+            if self.chordCommands[i]['chord'] == chord:
+                if self.chordCommands[i][commandType] is not None:
+                    self.chordCommands[i].pop(commandType)
+                if len(self.chordCommands[i]) == 2: # just the chord and state left
+                    self.chordCommands.pop(i)
                     self._resetButtons()
                 break
 
     
     def removeOnPress( self, chord):
-        self._removeActionFromChordActions (chord, 'press') # remove button-action from chordActions
+        self._removeCommandFromChordCommands (chord, 'press') # remove button-command from chordCommands
 
 
     def removeOnRelease( self, chord):
-        self._removeActionFromChordActions (chord, 'release') # remove button-action from chordActions
+        self._removeCommandFromChordCommands (chord, 'release') # remove button-command from chordCommands
 
 
     def removeWhile( self, chord):
-        self._removeActionFromChordActions (chord, 'while') # remove button-action from chordActions
+        self._removeCommandFromChordCommands (chord, 'while') # remove button-command from chordCommands
 
 
     def removeChord( self, chord):
         chord.sort() # to make sure buttons in same order for compare to work
-        for i in range (len(self.chordActions)):
-            if self.chordActions[i]['chord'] == chord:
-                self.chordActions.pop(i)
+        for i in range (len(self.chordCommands)):
+            if self.chordCommands[i]['chord'] == chord:
+                self.chordCommands.pop(i)
                 self._resetButtons()
                 break
 
@@ -122,35 +122,35 @@ class ButtonManager (): # this whole thing is tied to a joystick...
 
     def _resetButtons( self):
         self.monitoredButtons = {}           # dictionary of active button indices
-        for i in range (len(self.chordActions)):
-            for button in self.chordActions[i]['chord']:
+        for i in range (len(self.chordCommands)):
+            for button in self.chordCommands[i]['chord']:
                 if button not in self.monitoredButtons:
                     self.monitoredButtons.append(button)
 
 
     def _overrideSubsets( self, chord):
-        for i in range (len(self.chordActions)):
+        for i in range (len(self.chordCommands)):
             allKeyButtonsInChord = True
-            key = self.chordActions[i]['chord']
+            key = self.chordCommands[i]['chord']
             for button in key:
                 if button not in chord:   
                     allKeyButtonsInChord = False
                     break
             if allKeyButtonsInChord and len(key) != len( chord): #chord is a proper subset of key
-                self.chordActions[i]['state'] = OVERRIDDEN
+                self.chordCommands[i]['state'] = OVERRIDDEN
                 dprint (f"   overriding key:{key}")
 
 
     def _releaseSubsetOverrides( self, chord): # release all key subsets of chord
-        for i in range (len(self.chordActions)):
+        for i in range (len(self.chordCommands)):
             allKeyButtonsInChord = True
-            key = self.chordActions[i]['chord']
+            key = self.chordCommands[i]['chord']
             for button in key:
                 if button not in chord:
                     allKeyButtonsInChord = False
                     break
             if allKeyButtonsInChord and len(key) != len( chord): #chord is a proper subset of key
-                self.chordActions[i]['state'] = IDLE
+                self.chordCommands[i]['state'] = IDLE
 
 
     def getActiveButtons( self):
@@ -164,8 +164,8 @@ class ButtonManager (): # this whole thing is tied to a joystick...
     def check( self, activeButtons):
         dprint (f"    check called, monitoring:{self.monitoredButtons} active:{activeButtons}")
 
-        for i in range( len( self.chordActions)):
-            key = self.chordActions[i]['chord']
+        for i in range( len( self.chordCommands)):
+            key = self.chordCommands[i]['chord']
             dprint (f"        checking chord:{key}")
             released = True
             pressed = True
@@ -173,27 +173,27 @@ class ButtonManager (): # this whole thing is tied to a joystick...
                 released &= button not in activeButtons   # any pressed button will make False
                 pressed &= button in activeButtons    # any released button will make False
             if pressed:
-                dprint (f"            active chord:{key} : {self.chordActions[i]}")
-                if self.chordActions[i]['state'] == IDLE: # making inactive to active transition
-                    if 'press' in self.chordActions[i]:
-                        self.chordActions[i][ 'press'] ()
-                        dprint (f"            press action fired")
-                    self.chordActions[i]['state'] = PRESSED
+                dprint (f"            active chord:{key} : {self.chordCommands[i]}")
+                if self.chordCommands[i]['state'] == IDLE: # making inactive to active transition
+                    if 'press' in self.chordCommands[i]:
+                        self.chordCommands[i][ 'press'] ()
+                        dprint (f"            press command fired")
+                    self.chordCommands[i]['state'] = PRESSED
                     self._overrideSubsets( key)
-                    dprint(f"        double check on chordActions:{self.chordActions[i]}")
-                elif self.chordActions[i]['state'] == OVERRIDDEN: # button is part of another chord
+                    dprint(f"        double check on chordCommands:{self.chordCommands[i]}")
+                elif self.chordCommands[i]['state'] == OVERRIDDEN: # button is part of another chord
                     pass
                 else: # chord is being held, so WHILE is True
-                    if 'while' in self.chordActions[i]:
-                        self.chordActions[i][ 'while'] ()
-                        dprint (f"            while action fired")
+                    if 'while' in self.chordCommands[i]:
+                        self.chordCommands[i][ 'while'] ()
+                        dprint (f"            while command fired")
             elif released: #RELEASE IS TRUE
-                dprint (f"            inactive chord {key} : {self.chordActions[i]}")
-                if self.chordActions[i]['state'] == PRESSED: # making active to inactive transition
-                    if 'release' in self.chordActions[i]:
-                        self.chordActions[i][ 'release'] ()
-                        dprint (f"            release action fired")
-                    self.chordActions[i]['state'] = IDLE
+                dprint (f"            inactive chord {key} : {self.chordCommands[i]}")
+                if self.chordCommands[i]['state'] == PRESSED: # making active to inactive transition
+                    if 'release' in self.chordCommands[i]:
+                        self.chordCommands[i][ 'release'] ()
+                        dprint (f"            release command fired")
+                    self.chordCommands[i]['state'] = IDLE
                     self._releaseSubsetOverrides( key)
             else:
                 pass
@@ -202,9 +202,8 @@ class ButtonManager (): # this whole thing is tied to a joystick...
 
 
 '''
-onButton... could add entries to the buttonActionDictionary and the list of buttons
+onButton... could add entries to the buttonCommandDictionary and the list of buttons
 
-Start small and then build up... start with the paddles and maybe the tank mode switch
   eventually get rid of the isEdge function out of the Mode module
 
   Modes are part of a robot, and switch and chord states are part of a robot
@@ -255,7 +254,7 @@ keyManager.onPress(   [4,5], lambda : print("chord 4 5 pressed"))
 keyManager.onRelease( [4,5], lambda : print("chord 4 5 released"))
 progress('')
 print (f"active buttons {keyManager.monitoredButtons}")
-print (f"active actions {keyManager.chordActions}")
+print (f"active commands {keyManager.chordCommands}")
 progress( 'should see "button 4 pressed"')
 keyManager.check( [4])
 progress('')
@@ -288,7 +287,7 @@ keyManager.check( [])
 progress('should not see anything')
 keyManager.onPress( (5,4), lambda : print("chord 5 4 pressed"))
 keyManager.check( [])
-print(f"chord actions: {keyManager.chordActions}")
+print(f"chord commands: {keyManager.chordCommands}")
 
 progress('should see "button 4 5 pressed"')
 keyManager.check( [5,4])
