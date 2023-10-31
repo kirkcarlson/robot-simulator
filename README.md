@@ -28,7 +28,7 @@ Requirements:
         - left button selects elevator and arm presets (yes, this is a co-pilot function, but trying to see how the control might work. The hat seems like it might be a better control for this forward=up, back=down, right=out, left=in.)
         - right button selects rotation speed
   - second one is the ***red*** robot set up int the configureRobot2.py file
-    - this robot is configured to use the FRC 4513 pilot robot controls.
+    - this robot is configured to use the FRC 4513 second robot pilot controls.
         - left joystick controls motion of robot
         - left trigger controls CCW rotation
         - right trigger controls CCW rotation
@@ -49,11 +49,11 @@ This program is not robust and does not have very much input validation.
 
 The following files are used (indentation shows general structure):
 
-- robotSim.py -- main program including mapping of controller inputs to robot actions.
+- robotSim.py -- main program including mapping of controller inputs to robot commands.
   - joystickManager.py -- interfaces the Xbox controller and normalizes the inputs.
-    - buttonManger.py -- maps button press, depress and while events to defined actions.
+    - buttonManger.py -- maps button press, depress and while events to defined commands.
         - mode.py -- provides for modal controls.
-  - robot.py -- defines robot actions.
+  - robot.py -- defines robot commands.
   - info.py -- displays information about the joystick controller and robot.
   - rmath.py -- provides specialized math functions for robots.
   - field.py -- future module to define field elements for more realistic simulation.
@@ -68,7 +68,7 @@ This simulation has a few goals:
 
 ### Mapping Joystick to Robot Commands
 - Includes a mode module to have a button with multiple modes.
-- Includes a button manager module to perform actions on the pressing, releasing or holding of one or more keys.
+- Includes a button manager module to perform commands on the pressing, releasing or holding of one or more keys.
 - Includes a way to map a joystick or hat device to a directionally controlled device.
 - Includes a way to normalize trigger devices to be between 0 and 1 rather than their native -1 and +1.
 - Commands are mapped using lamda functions to pass their address to the joystick event detection module.
@@ -88,7 +88,7 @@ This is a fairly subjective exercise, but it does provide a laboratory for explo
 - Xbox controllers with paddle buttons are useful in general.
 - Mapping the paddle buttons, where available, to a chord is not a good idea as it get invoked when not wanted.
     - the PowerA controller paddle buttons can be reassinged to any button. Since the joystick buttons are not used, this is a good assignment.
-    - the AfterGlow controller paddle buttons are permanently assigned to the A and B buttons, which is a conflict as both are useful control locations.
+    - the AfterGlow controller paddle buttons are permanently assigned to the A and B buttons, which is a conflict as both are useful control locations and they seem backward (A is the same as the right paddle and B is the same as the left paddle.)
 - The mechanisms for assigning joysticks and buttons to functions is compact and fairly easy to modify if not understand. 
 - Chords, pressing of multiple buttons simutaneously, can be a useful feature.
 
@@ -101,4 +101,4 @@ This is a fairly subjective exercise, but it does provide a laboratory for explo
 - Add game elements with collisions to better improve game conditions
 - Add collision with the second robot
 - Just move on to the real simulation offered by WPI
-- simplification of button to action assignment code or expression (shorter names, initialization table, or something else...)
+- simplification of button to command assignment code or expression (shorter names, initialization table, or something else... YAML, JSON, python dictionary)

@@ -36,7 +36,7 @@ class JoystickManager ():
             listOfJoys = list( listOfJoys)
         self.combinedJoyList = listOfJoys
 
-    def check(self): # periodic update of joystick variables
+    def update(self): # periodic update of joystick variables
         # robot movement with hat
         move = self.joystick.get_hat( 0)
         self.hat.x = move [0]
@@ -77,7 +77,7 @@ class JoystickManager ():
         for joyButton in range (self.joystick.get_numbuttons()):
             if self.joystick.get_button( joyButton):
                 activeJoyButtons.append( joyButton)
-        self.buttonManager.check( activeJoyButtons)
+        self.buttonManager.update( activeJoyButtons)
 
         # this should be obsolete when editing complete
         self.combinedJoy = Vector() # reset it to zero

@@ -110,7 +110,7 @@ class Robot(pygame.sprite.Sprite):
         let's try this first...
         '''
         # update keys and axis before joysticks to give them a little priority
-        self.joystickManager.check() # update the since commands have same code
+        self.joystickManager.update() # update the joystick status since commands use results
         for command in self.driveByAxis:
             command()
 

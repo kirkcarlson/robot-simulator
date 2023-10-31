@@ -161,12 +161,12 @@ class ButtonManager (): # this whole thing is tied to a joystick...
         return buttonActivity
 
 
-    def check( self, activeButtons):
-        dprint (f"    check called, monitoring:{self.monitoredButtons} active:{activeButtons}")
+    def update( self, activeButtons):
+        dprint (f"    update called, monitoring:{self.monitoredButtons} active:{activeButtons}")
 
         for i in range( len( self.chordCommands)):
             key = self.chordCommands[i]['chord']
-            dprint (f"        checking chord:{key}")
+            dprint (f"        updating chord:{key}")
             released = True
             pressed = True
             for button in key:  #all buttons have to be same to alter chord state
@@ -256,44 +256,44 @@ progress('')
 print (f"active buttons {keyManager.monitoredButtons}")
 print (f"active commands {keyManager.chordCommands}")
 progress( 'should see "button 4 pressed"')
-keyManager.check( [4])
+keyManager.update( [4])
 progress('')
-keyManager.check( [4])
+keyManager.update( [4])
 
 progress( 'should see "button 4 released"')
-keyManager.check( [])
+keyManager.update( [])
 progress('')
-keyManager.check( [])
+keyManager.update( [])
 
 progress( 'should see "button 5 pressed"')
-keyManager.check( [5])
+keyManager.update( [5])
 progress('')
-keyManager.check( [5])
+keyManager.update( [5])
 
 progress( 'should see "chord 4 5 pressed"')
-keyManager.check( [4, 5])
+keyManager.update( [4, 5])
 progress('')
-keyManager.check( [4, 5])
+keyManager.update( [4, 5])
 
 progress( 'chord 4 5 is holding until all released"')
-keyManager.check( [4])
+keyManager.update( [4])
 progress('')
-keyManager.check( [4])
+keyManager.update( [4])
 
 progress('should see "button 4 5 released"')
-keyManager.check( [])
-keyManager.check( [])
+keyManager.update( [])
+keyManager.update( [])
 
 progress('should not see anything')
 keyManager.onPress( (5,4), lambda : print("chord 5 4 pressed"))
-keyManager.check( [])
+keyManager.update( [])
 print(f"chord commands: {keyManager.chordCommands}")
 
 progress('should see "button 4 5 pressed"')
-keyManager.check( [5,4])
+keyManager.update( [5,4])
 
 progress('should see "button 4 5 released"')
-keyManager.check( [])
+keyManager.update( [])
 
 
 #'''
