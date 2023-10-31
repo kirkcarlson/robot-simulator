@@ -6,7 +6,7 @@ Requirements:
 - pygame library (for the game and joystick interfaces and sprite methods)
 - math library (for trigometric and square root math operators)
 - One or two Xbox controllers
-  - first one is the ***blue*** robot
+  - first one is the ***blue*** robot set up int the configureRobot1.py file
     - this robot has the experimental button map as follows:
         - left joystick controls motion of robot
         - right joystick controls motion of robot
@@ -27,7 +27,7 @@ Requirements:
         - menu button controls 'start'
         - left button selects elevator and arm presets (yes, this is a co-pilot function, but trying to see how the control might work. The hat seems like it might be a better control for this forward=up, back=down, right=out, left=in.)
         - right button selects rotation speed
-  - second one is the ***red*** robot
+  - second one is the ***red*** robot set up int the configureRobot2.py file
     - this robot is configured to use the FRC 4513 pilot robot controls.
         - left joystick controls motion of robot
         - left trigger controls CCW rotation

@@ -61,6 +61,8 @@ class Robot(pygame.sprite.Sprite):
         #pygame.draw.lines(self.original_image, robotColor, True, [( 0,0),  (31,0),  (31,13), (8,13),
         #                                                            (8,9),   (4,9),   (4,21), (8,21),
         #                                                            (9,17), (31,17), (31,31), (0,31)])
+        # ideally the following line should be passed to the __init__ method to
+        # allow different robot shapes
         pygame.draw.lines(self.original_image, self.color, True, [( 0,0),  (31,0),  (31,31),  (0,31),
                                                                    ( 0,17), (23,17), (23,21), (27,21),
                                                                    (27,9),  (23,9),  (23,13),  (0,13)])
